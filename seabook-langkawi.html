@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SeaBook Langkawi — Marine Activity Booking Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont/dist/tabler-icons.min.css">
+<style>
+/* ── reset & tokens ─────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ocean:#0369a1;--ocean-l:#0ea5e9;--ocean-ll:#e0f2fe;
+  --gold:#d97706;--gold-l:#fbbf24;--gold-ll:#fef3c7;
+  --teal:#0f766e;--teal-l:#14b8a6;--teal-ll:#ccfbf1;
+  --coral:#dc2626;--coral-l:#f87171;--coral-ll:#fee2e2;
+  --bg:#f8fafc;--bg2:#f1f5f9;--bg3:#e2e8f0;
+  --surf:#ffffff;
+  --tx:#0f172a;--tx2:#475569;--tx3:#94a3b8;
+  --br:#e2e8f0;--br2:#cbd5e1;
+  --r4:4px;--r8:8px;--r12:12px;--r16:16px;--r20:20px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -2px rgba(0,0,0,.05);
+  --font-head:'Syne',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+}
+html{font-size:14px;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font-body);color:var(--tx);background:var(--bg);min-height:100vh;overflow-x:hidden}
+
+/* ── scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:99px}
+
+/* ── layout ─────────────────────────────────────────────── */
+.app{display:grid;grid-template-rows:52px 1fr;grid-template-columns:220px 1fr;height:100vh;overflow:hidden}
+.topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--surf);border-bottom:1px solid var(--br);z-index:100}
+.sidebar{background:var(--surf);border-right:1px solid var(--br);overflow-y:auto;padding:14px 10px}
+.main{overflow-y:auto;background:var(--bg);padding:20px}
+
+/* ── topbar ─────────────────────────────────────────────── */
+.logo{display:flex;align-items:center;gap:9px}
+.logo-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--ocean),var(--ocean-l));border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;flex-shrink:0}
+.logo-name{font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--tx);letter-spacing:-.3px}
+.logo-tag{font-size:10px;color:var(--tx3);margin-top:-2px}
+.topnav{display:flex;gap:2px}
+.tnb{padding:5px 12px;font-size:12px;font-weight:500;border-radius:var(--r8);cursor:pointer;border:none;background:transparent;color:var(--tx2);transition:all .15s;font-family:var(--font-body)}
+.tnb:hover{background:var(--bg2);color:var(--tx)}
+.tnb.act{background:var(--ocean-ll);color:var(--ocean)}
+.topright{display:flex;align-items:center;gap:10px}
+.topbtn{display:flex;align-items:center;gap:5px;padding:5px 12px;font-size:12px;font-weight:500;border-radius:var(--r8);cursor:pointer;border:1px solid var(--br);background:var(--surf);color:var(--tx2);transition:all .15s;font-family:var(--font-body)}
+.topbtn:hover{border-color:var(--br2);background:var(--bg2)}
+.topbtn.primary{background:var(--ocean);color:#fff;border-color:var(--ocean)}
+.topbtn.primary:hover{background:var(--ocean-l)}
+.topbtn.wa{background:#dcfce7;color:#15803d;border-color:#bbf7d0}
+.topbtn.wa:hover{background:#bbf7d0}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--ocean);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:var(--font-head)}
+.notif-wrap{position:relative;cursor:pointer;padding:4px}
+.notif-dot{position:absolute;top:2px;right:2px;width:7px;height:7px;background:#ef4444;border-radius:50%;border:1.5px solid var(--surf)}
+
+/* ── sidebar ─────────────────────────────────────────────── */
+.slbl{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);padding:4px 8px;margin-top:10px;display:block;font-family:var(--font-head)}
+.sitem{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:var(--r8);cursor:pointer;font-size:12px;color:var(--tx2);transition:all .12s;margin-bottom:1px}
+.sitem:hover{background:var(--bg2);color:var(--tx)}
+.sitem.act{background:var(--ocean-ll);color:var(--ocean);font-weight:500}
+.sitem i{font-size:15px;width:16px;flex-shrink:0}
+.sbadge{margin-left:auto;font-size:9px;font-weight:600;padding:2px 6px;border-radius:99px;background:var(--ocean);color:#fff}
+.sbadge.warn{background:var(--gold-ll);color:var(--gold)}
+.sbadge.green{background:var(--teal-ll);color:var(--teal)}
+.sbadge.red{background:var(--coral-ll);color:var(--coral)}
+.gw-pill{display:flex;align-items:center;gap:5px;padding:6px 9px;border-radius:var(--r8);margin-bottom:5px;font-size:11px;border:1px solid var(--br);background:var(--bg2)}
+.gw-status{width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0}
+
+/* ── page system ─────────────────────────────────────────── */
+.page{display:none}.page.act{display:block}
+
+/* ── section headers ─────────────────────────────────────── */
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.pt{font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--tx)}
+.actions{display:flex;gap:7px;align-items:center}
+
+/* ── stat cards ──────────────────────────────────────────── */
+.stats4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat{background:var(--surf);border:1px solid var(--br);border-radius:var(--r12);padding:14px 16px;box-shadow:var(--shadow)}
+.stat-lbl{font-size:11px;color:var(--tx2);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.stat-lbl i{font-size:14px}
+.stat-num{font-family:var(--font-head);font-size:24px;font-weight:700;color:var(--tx);line-height:1}
+.stat-ch{font-size:11px;color:#22c55e;margin-top:4px;display:flex;align-items:center;gap:3px}
+.stat-ch.dn{color:#ef4444}
+.stat-ch i{font-size:11px}
+.stat-icon{float:right;width:34px;height:34px;border-radius:var(--r8);display:flex;align-items:center;justify-content:center;font-size:17px;margin-top:-4px}
+
+/* ── cards ───────────────────────────────────────────────── */
+.card{background:var(--surf);border:1px solid var(--br);border-radius:var(--r12);padding:16px;box-shadow:var(--shadow)}
+.card-title{font-family:var(--font-head);font-size:13px;font-weight:600;color:var(--tx);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px}
+
+/* ── table ───────────────────────────────────────────────── */
+.tbl-wrap{background:var(--surf);border:1px solid var(--br);border-radius:var(--r12);overflow:auto;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:860px}
+th{background:var(--bg2);padding:9px 13px;text-align:left;font-weight:600;font-size:10px;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--br);white-space:nowrap;font-family:var(--font-head)}
+td{padding:9px 13px;border-bottom:1px solid var(--br);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:background .08s}
+tbody tr:hover td{background:var(--bg2)}
+
+/* ── badges/pills ────────────────────────────────────────── */
+.pill{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:99px;font-size:10px;font-weight:600;white-space:nowrap;font-family:var(--font-head)}
+.pill-conf{background:#dcfce7;color:#15803d}
+.pill-pend{background:#fef3c7;color:#92400e}
+.pill-canc{background:#fee2e2;color:#991b1b}
+.pill-cin{background:#dbeafe;color:#1e40af}
+.pill-paid{background:#dcfce7;color:#15803d}
+.pill-part{background:#fef3c7;color:#92400e}
+.pill-unp{background:#fee2e2;color:#991b1b}
+.pill-ref{background:#f1f5f9;color:#475569}
+.op-tag{display:inline-block;padding:2px 8px;border-radius:var(--r4);font-size:10px;font-weight:500;background:var(--bg2);color:var(--tx2);border:1px solid var(--br);border-left-width:3px}
+
+/* ── filter chips ────────────────────────────────────────── */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:13px}
+.chip{padding:4px 12px;border-radius:99px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--br);background:var(--surf);color:var(--tx2);transition:all .12s;font-family:var(--font-body)}
+.chip:hover{border-color:var(--br2);background:var(--bg2)}
+.chip.act{background:var(--ocean);color:#fff;border-color:var(--ocean)}
+
+/* ── forms ───────────────────────────────────────────────── */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fg-full{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:12px}
+.fl{font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:3px;display:block;font-family:var(--font-head)}
+.fi{width:100%;padding:8px 11px;font-size:12px;border:1px solid var(--br);border-radius:var(--r8);background:var(--surf);color:var(--tx);font-family:var(--font-body);transition:border-color .15s;outline:none}
+.fi:focus{border-color:var(--ocean);box-shadow:0 0 0 3px rgba(3,105,161,.1)}
+.fs{width:100%;padding:8px 11px;font-size:12px;border:1px solid var(--br);border-radius:var(--r8);background:var(--surf);color:var(--tx);font-family:var(--font-body);cursor:pointer;outline:none}
+.fs:focus{border-color:var(--ocean)}
+
+/* ── buttons ─────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;font-size:12px;font-weight:500;border-radius:var(--r8);cursor:pointer;border:1px solid var(--br);background:var(--surf);color:var(--tx2);transition:all .12s;font-family:var(--font-body);line-height:1}
+.btn:hover{background:var(--bg2);border-color:var(--br2)}
+.btn.p{background:var(--ocean);color:#fff;border-color:var(--ocean)}
+.btn.p:hover{background:var(--ocean-l)}
+.btn.g{background:var(--teal);color:#fff;border-color:var(--teal)}
+.btn.g:hover{background:var(--teal-l)}
+.btn.wa{background:#16a34a;color:#fff;border-color:#16a34a}
+.btn.wa:hover{background:#15803d}
+.btn.xl{background:#166534;color:#fff;border-color:#166534}
+.btn.xl:hover{background:#14532d}
+.btn.danger{background:#dc2626;color:#fff;border-color:#dc2626}
+.btn-full{width:100%;justify-content:center;padding:10px}
+
+/* ── modal ───────────────────────────────────────────────── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.overlay.open{display:flex}
+.modal{background:var(--surf);border-radius:var(--r16);padding:22px;width:500px;max-width:95vw;border:1px solid var(--br);max-height:90vh;overflow-y:auto;box-shadow:0 20px 25px -5px rgba(0,0,0,.1),0 8px 10px -6px rgba(0,0,0,.1);animation:slideUp .2s ease}
+.modal-lg{width:620px}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.mtitle{font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--tx)}
+.mclose{background:none;border:none;cursor:pointer;color:var(--tx3);font-size:16px;padding:3px;border-radius:var(--r4);transition:color .1s}
+.mclose:hover{color:var(--tx)}
+
+/* ── pay summary box ─────────────────────────────────────── */
+.pay-box{background:var(--bg2);border-radius:var(--r8);padding:11px 13px;margin:10px 0;font-size:12px}
+.pay-row{display:flex;justify-content:space-between;color:var(--tx2);padding:2px 0}
+.pay-tot{display:flex;justify-content:space-between;font-weight:600;font-size:13px;color:var(--tx);border-top:1px solid var(--br);padding-top:7px;margin-top:5px;font-family:var(--font-head)}
+
+/* ── activity bars ───────────────────────────────────────── */
+.act-li{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--br);font-size:12px}
+.act-li:last-child{border-bottom:none}
+.act-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.act-bar-wrap{flex:1;height:4px;background:var(--bg3);border-radius:99px;overflow:hidden}
+.act-bar-fill{height:100%;border-radius:99px}
+.act-num{min-width:24px;text-align:right;font-weight:600;font-family:var(--font-head)}
+
+/* ── revenue bars ────────────────────────────────────────── */
+.rev-bars{display:flex;align-items:flex-end;gap:6px;height:90px;padding:0 2px;margin:10px 0}
+.rbc{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.rbb{width:100%;border-radius:var(--r4) var(--r4) 0 0;min-height:3px;transition:height .3s}
+.rbl{font-size:9px;color:var(--tx3);font-family:var(--font-head);font-weight:600}
+
+/* ── payment methods ─────────────────────────────────────── */
+.meth-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.mcard{border:1.5px solid var(--br);border-radius:var(--r12);padding:11px 8px;cursor:pointer;text-align:center;transition:all .12s}
+.mcard:hover{border-color:var(--ocean-l)}
+.mcard.sel{border-color:var(--ocean);background:var(--ocean-ll)}
+.mcard-ic{font-size:22px;margin-bottom:5px}
+.mcard-nm{font-size:11px;font-weight:600;color:var(--tx);font-family:var(--font-head)}
+.mcard-sb{font-size:10px;color:var(--tx2)}
+
+/* ── bank grid ───────────────────────────────────────────── */
+.bank-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+.bk{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid var(--br);border-radius:var(--r8);cursor:pointer;font-size:12px;transition:all .12s}
+.bk:hover{border-color:var(--ocean-l)}.bk.sel{border-color:var(--ocean);background:var(--ocean-ll)}
+.bk-dot{width:28px;height:28px;border-radius:var(--r8);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+
+/* ── gateway section ─────────────────────────────────────── */
+.processing{text-align:center;padding:30px 20px}
+.spin{width:40px;height:40px;border:3px solid var(--bg3);border-top-color:var(--ocean);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.success-circle{width:56px;height:56px;border-radius:50%;background:var(--teal-ll);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.success-circle i{font-size:26px;color:var(--teal)}
+
+/* ── guest portal steps ──────────────────────────────────── */
+.steps-bar{display:flex;margin-bottom:20px;overflow:hidden;border-radius:var(--r12);border:1px solid var(--br)}
+.step-btn{flex:1;padding:9px 8px;text-align:center;font-size:11px;font-weight:600;border:none;background:var(--surf);color:var(--tx2);cursor:pointer;transition:all .15s;font-family:var(--font-head);border-right:1px solid var(--br)}
+.step-btn:last-child{border-right:none}
+.step-btn.act{background:var(--ocean);color:#fff}
+.step-btn.done{background:var(--teal-ll);color:var(--teal)}
+
+/* ── activity cards ──────────────────────────────────────── */
+.act-cards{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.acard{border:1.5px solid var(--br);border-radius:var(--r12);padding:13px;cursor:pointer;transition:all .12s}
+.acard:hover{border-color:var(--ocean-l);box-shadow:var(--shadow)}
+.acard.sel{border-color:var(--ocean);background:var(--ocean-ll)}
+.acard-icon{font-size:22px;margin-bottom:6px}
+.acard-name{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:2px;font-family:var(--font-head)}
+.acard-desc{font-size:11px;color:var(--tx2);line-height:1.4;margin-bottom:4px}
+.acard-price{font-size:13px;font-weight:700;color:var(--ocean);font-family:var(--font-head)}
+
+/* ── operator cards ──────────────────────────────────────── */
+.op-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.opcard{display:flex;align-items:flex-start;gap:9px;border:1.5px solid var(--br);border-radius:var(--r12);padding:11px;cursor:pointer;transition:all .12s}
+.opcard:hover{border-color:var(--ocean-l)}.opcard.sel{border-color:var(--ocean);background:var(--ocean-ll)}
+.opav{width:32px;height:32px;border-radius:var(--r8);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;font-family:var(--font-head)}
+.opname{font-size:12px;font-weight:600;color:var(--tx);font-family:var(--font-head)}
+.optype{font-size:10px;color:var(--tx2)}
+.oprat{font-size:10px;color:var(--gold);margin-top:2px;display:flex;align-items:center;gap:3px}
+
+/* ── time slots ──────────────────────────────────────────── */
+.time-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tslot{padding:7px 14px;border:1.5px solid var(--br);border-radius:var(--r8);cursor:pointer;font-size:12px;font-weight:500;color:var(--tx2);transition:all .12s;font-family:var(--font-body)}
+.tslot:hover{border-color:var(--ocean-l)}.tslot.sel{background:var(--ocean);color:#fff;border-color:var(--ocean)}
+.tslot.full{opacity:.4;cursor:not-allowed;text-decoration:line-through}
+
+/* ── pax control ─────────────────────────────────────────── */
+.pax-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--br)}
+.pax-row:last-child{border-bottom:none}
+.pax-ctrl{display:flex;align-items:center;gap:10px}
+.pax-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--br);background:var(--surf);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--tx2);transition:all .12s;line-height:1}
+.pax-btn:hover{background:var(--ocean);color:#fff;border-color:var(--ocean)}
+.pax-num{font-size:16px;font-weight:700;min-width:22px;text-align:center;font-family:var(--font-head)}
+
+/* ── trust bar ───────────────────────────────────────────── */
+.trust-bar{display:flex;align-items:center;gap:14px;padding:9px 0;border-top:1px solid var(--br);margin-top:10px;font-size:11px;color:var(--tx2)}
+.trust-bar i{color:var(--teal);font-size:13px}
+
+/* ── receipt ─────────────────────────────────────────────── */
+.receipt{background:var(--bg2);border-radius:var(--r8);padding:12px 14px;margin:12px 0;font-size:12px}
+.receipt-row{display:flex;justify-content:space-between;padding:4px 0;color:var(--tx2);border-bottom:1px solid var(--br)}
+.receipt-row:last-child{border-bottom:none}
+
+/* ── operators grid ──────────────────────────────────────── */
+.ops-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opfull{background:var(--surf);border:1px solid var(--br);border-radius:var(--r12);padding:14px;box-shadow:var(--shadow);cursor:pointer;transition:border-color .12s}
+.opfull:hover{border-color:var(--ocean-l)}
+.op-stats3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center;margin:10px 0}
+.op-stat-n{font-size:15px;font-weight:700;font-family:var(--font-head)}
+.op-stat-l{font-size:9px;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;font-family:var(--font-head)}
+
+/* ── portal tabs ─────────────────────────────────────────── */
+.ptabs{display:flex;gap:4px;background:var(--bg2);padding:4px;border-radius:var(--r12);margin-bottom:16px}
+.ptab{flex:1;padding:8px;font-size:12px;font-weight:600;text-align:center;border:none;background:transparent;cursor:pointer;border-radius:var(--r8);color:var(--tx2);transition:all .12s;font-family:var(--font-head)}
+.ptab.act{background:var(--surf);color:var(--tx);box-shadow:var(--shadow)}
+
+/* ── card-input ──────────────────────────────────────────── */
+.ci{position:relative}.ci .fi{padding-left:34px}
+.ci i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:14px}
+
+/* ── export progress ─────────────────────────────────────── */
+.prog-bar{height:4px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-top:5px}
+.prog-fill{height:100%;border-radius:99px;background:#16a34a;transition:width .3s}
+
+/* ── toast ───────────────────────────────────────────────── */
+#toast-wrap{position:fixed;bottom:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{background:var(--surf);border:1px solid var(--br);border-radius:var(--r12);padding:10px 14px;font-size:12px;display:flex;align-items:center;gap:8px;transform:translateX(120%);opacity:0;transition:all .25s;box-shadow:var(--shadow-md);pointer-events:auto;min-width:200px;max-width:300px}
+.toast.show{transform:translateX(0);opacity:1}
+.toast i{font-size:14px;flex-shrink:0}
+.toast.ok i{color:#16a34a}.toast.info i{color:var(--ocean)}.toast.warn i{color:var(--gold)}.toast.wa i{color:#16a34a}
+
+/* ── wa preview ──────────────────────────────────────────── */
+.wa-bubble{background:#dcfce7;border-radius:8px 8px 8px 0;padding:10px 13px;font-size:12px;color:#1a1a1a;line-height:1.6;display:inline-block;max-width:90%;white-space:pre-wrap}
+
+/* ── timeline ────────────────────────────────────────────── */
+.timeline{position:relative;padding-left:22px}
+.timeline::before{content:'';position:absolute;left:7px;top:5px;bottom:5px;width:1px;background:var(--br)}
+.tl-item{position:relative;padding:0 0 16px 16px}
+.tl-dot{position:absolute;left:-19px;top:3px;width:10px;height:10px;border-radius:50%;background:var(--ocean);border:2px solid var(--surf)}
+
+/* ── info/warn/success boxes ─────────────────────────────── */
+.ibox{border-radius:var(--r8);padding:10px 12px;font-size:11px;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start}
+.ibox i{font-size:14px;flex-shrink:0;margin-top:1px}
+.ibox.blue{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+.ibox.green{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.ibox.amber{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+
+/* ── search input ────────────────────────────────────────── */
+.search-wrap{position:relative}.search-wrap .fi{padding-left:32px}
+.search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:14px}
+
+/* ── WA tpl cards ────────────────────────────────────────── */
+.tpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.tpl-card{border:1.5px solid var(--br);border-radius:var(--r8);padding:10px;cursor:pointer;transition:all .12s}
+.tpl-card:hover{border-color:var(--ocean-l)}.tpl-card.sel{border-color:var(--ocean);background:var(--ocean-ll)}
+.tpl-name{font-size:12px;font-weight:600;font-family:var(--font-head);color:var(--tx);margin-bottom:3px}
+.tpl-desc{font-size:10px;color:var(--tx2)}
+
+/* ── export options ──────────────────────────────────────── */
+.exp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.exp-opt{border:1px solid var(--br);border-radius:var(--r12);padding:12px;cursor:pointer;display:flex;align-items:flex-start;gap:9px;transition:all .12s}
+.exp-opt:hover{border-color:#16a34a;background:#f0fdf4}
+.exp-opt i{font-size:20px;color:#16a34a;margin-top:1px}
+.exp-name{font-size:12px;font-weight:600;font-family:var(--font-head);color:var(--tx);margin-bottom:2px}
+.exp-desc{font-size:10px;color:var(--tx2)}
+
+/* ── activity breakdown list ─────────────────────────────── */
+.act-bkdn{margin-bottom:12px}
+
+/* ── wa stats mini ───────────────────────────────────────── */
+.was4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.was{background:var(--bg2);border-radius:var(--r8);padding:10px;text-align:center}
+.was-n{font-size:18px;font-weight:700;font-family:var(--font-head)}
+.was-l{font-size:10px;color:var(--tx2)}
+
+/* ── portal form wrap ────────────────────────────────────── */
+.portal-wrap{max-width:580px;margin:0 auto}
+
+/* ── scrollable content inside modal ────────────────────── */
+.mscroll{max-height:70vh;overflow-y:auto}
+
+/* ── operator full card ──────────────────────────────────── */
+.opfull-hdr{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+
+/* ── settings gw ─────────────────────────────────────────── */
+.gw-card{border:1px solid var(--br);border-radius:var(--r12);padding:12px;margin-bottom:8px}
+.gw-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.gw-card-name{font-size:12px;font-weight:600;font-family:var(--font-head)}
+
+/* ── lookup result ───────────────────────────────────────── */
+.lookup-res{background:var(--bg2);border-radius:var(--r12);padding:14px;margin-top:12px}
+.lres-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:12px;margin:10px 0}
+.lres-l{color:var(--tx2)}.lres-v{font-weight:500}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<!-- ═══════════════ TOPBAR ═══════════════ -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-icon"><i class="ti ti-anchor" aria-hidden="true"></i></div>
+    <div><div class="logo-name">SeaBook</div><div class="logo-tag">Langkawi Marine Booking Platform</div></div>
+  </div>
+  <nav class="topnav" aria-label="Main navigation">
+    <button class="tnb act" onclick="nav('dashboard',this)">Dashboard</button>
+    <button class="tnb" onclick="nav('bookings',this)">Bookings</button>
+    <button class="tnb" onclick="nav('payments',this)">Payments</button>
+    <button class="tnb" onclick="nav('gateway',this)">Pay Gateway</button>
+    <button class="tnb" onclick="nav('guestportal',this)">Guest Portal</button>
+    <button class="tnb" onclick="nav('whatsapp',this)">WhatsApp</button>
+    <button class="tnb" onclick="nav('export',this)">Export</button>
+    <button class="tnb" onclick="nav('operators',this)">Operators</button>
+  </nav>
+  <div class="topright">
+    <button class="topbtn wa" onclick="nav('whatsapp',document.querySelectorAll('.tnb')[5])"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button>
+    <button class="topbtn primary" onclick="openNewBooking()"><i class="ti ti-plus"></i> New Booking</button>
+    <div class="notif-wrap" aria-label="Notifications" onclick="nav('dashboard',document.querySelectorAll('.tnb')[0])"><i class="ti ti-bell" style="font-size:18px;color:var(--tx2)"></i><div class="notif-dot"></div></div>
+    <div class="avatar">AM</div>
+  </div>
+</header>
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<aside class="sidebar" aria-label="Sidebar navigation">
+  <span class="slbl">Main</span>
+  <div class="sitem act" onclick="nav('dashboard',document.querySelectorAll('.tnb')[0])"><i class="ti ti-layout-dashboard"></i> Overview <span class="sbadge green">Live</span></div>
+  <div class="sitem" onclick="nav('bookings',document.querySelectorAll('.tnb')[1])"><i class="ti ti-calendar-check"></i> All Bookings <span class="sbadge">247</span></div>
+  <div class="sitem" onclick="nav('payments',document.querySelectorAll('.tnb')[2])"><i class="ti ti-credit-card"></i> Payments <span class="sbadge warn">38</span></div>
+  <div class="sitem" onclick="nav('gateway',document.querySelectorAll('.tnb')[3])"><i class="ti ti-building-bank"></i> Pay Gateway</div>
+  <div class="sitem" onclick="nav('guestportal',document.querySelectorAll('.tnb')[4])"><i class="ti ti-world"></i> Guest Portal</div>
+  <div class="sitem" onclick="nav('whatsapp',document.querySelectorAll('.tnb')[5])"><i class="ti ti-brand-whatsapp"></i> WhatsApp <span class="sbadge green">New</span></div>
+  <div class="sitem" onclick="nav('export',document.querySelectorAll('.tnb')[6])"><i class="ti ti-file-spreadsheet"></i> Export</div>
+  <div class="sitem" onclick="nav('operators',document.querySelectorAll('.tnb')[7])"><i class="ti ti-users"></i> Operators</div>
+  <span class="slbl">Activities</span>
+  <div class="sitem" onclick="filterAct('Island Hopping')"><i class="ti ti-map-pin"></i> Island Hopping <span class="sbadge" style="background:#ea580c">63</span></div>
+  <div class="sitem" onclick="filterAct('Sunset Cruise')"><i class="ti ti-sun"></i> Sunset Cruise <span class="sbadge warn">42</span></div>
+  <div class="sitem" onclick="filterAct('Fishing Trip')"><i class="ti ti-fish"></i> Fishing Trip <span class="sbadge green">29</span></div>
+  <div class="sitem" onclick="filterAct('Half Day Cruise')"><i class="ti ti-clock"></i> Half Day <span class="sbadge">51</span></div>
+  <div class="sitem" onclick="filterAct('Day Cruise')"><i class="ti ti-boat"></i> Day Cruise <span class="sbadge">38</span></div>
+  <span class="slbl">Payment Status</span>
+  <div class="sitem" onclick="filterPay('paid')"><span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block"></span> Paid <span class="sbadge green">162</span></div>
+  <div class="sitem" onclick="filterPay('partial')"><span style="width:7px;height:7px;border-radius:50%;background:var(--gold);display:inline-block"></span> Partial <span class="sbadge warn">47</span></div>
+  <div class="sitem" onclick="filterPay('unpaid')"><span style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block"></span> Unpaid <span class="sbadge red">38</span></div>
+  <span class="slbl">Gateway</span>
+  <div class="gw-pill"><div class="gw-status"></div><div><div style="font-size:11px;font-weight:600;font-family:var(--font-head)">FPX Online</div><div style="font-size:10px;color:var(--tx3)">8 banks active</div></div></div>
+  <div class="gw-pill"><div class="gw-status"></div><div><div style="font-size:11px;font-weight:600;font-family:var(--font-head)">Cards</div><div style="font-size:10px;color:var(--tx3)">Visa · MC · AMEX</div></div></div>
+  <div class="gw-pill"><div class="gw-status"></div><div><div style="font-size:11px;font-weight:600;font-family:var(--font-head)">eWallet</div><div style="font-size:10px;color:var(--tx3)">TNG · Grab · Boost</div></div></div>
+</aside>
+
+<!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+<main class="main" id="mainContent">
+
+<!-- ─── DASHBOARD ─── -->
+<div class="page act" id="pg-dashboard">
+  <div class="stats4">
+    <div class="stat"><div class="stat-icon" style="background:var(--ocean-ll);color:var(--ocean)"><i class="ti ti-calendar-check"></i></div><div class="stat-lbl"><i class="ti ti-calendar-check"></i> Bookings today</div><div class="stat-num">23</div><div class="stat-ch"><i class="ti ti-trending-up"></i> +12% vs yesterday</div></div>
+    <div class="stat"><div class="stat-icon" style="background:#dcfce7;color:#16a34a"><i class="ti ti-building-bank"></i></div><div class="stat-lbl"><i class="ti ti-building-bank"></i> Revenue (MYR)</div><div class="stat-num">18,640</div><div class="stat-ch"><i class="ti ti-trending-up"></i> +22% this week</div></div>
+    <div class="stat"><div class="stat-icon" style="background:var(--gold-ll);color:var(--gold)"><i class="ti ti-clock"></i></div><div class="stat-lbl"><i class="ti ti-clock"></i> Pending payments</div><div class="stat-num">38</div><div class="stat-ch dn"><i class="ti ti-trending-up"></i> 5 overdue</div></div>
+    <div class="stat"><div class="stat-icon" style="background:#dcfce7;color:#16a34a"><i class="ti ti-brand-whatsapp"></i></div><div class="stat-lbl"><i class="ti ti-brand-whatsapp"></i> WA msgs today</div><div class="stat-num">142</div><div class="stat-ch"><i class="ti ti-trending-up"></i> Confirmations sent</div></div>
+  </div>
+  <div class="row2">
+    <div class="card">
+      <div class="card-title">Activity breakdown</div>
+      <div class="act-bkdn" id="dash-actbkdn"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Weekly revenue (MYR)</div>
+      <div class="rev-bars" id="dash-rev"></div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--tx3);font-family:var(--font-head);font-weight:600;margin-top:3px"><span>0</span><span>5k</span><span>10k</span><span>15k</span><span>20k+</span></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--br);font-size:11px;color:var(--tx2)">Top operator: <span style="font-weight:600;color:var(--tx)">Langkawi Pearl Cruises</span> <span style="color:#16a34a;font-weight:600">MYR 4,280</span></div>
+    </div>
+  </div>
+  <div class="ph"><div class="pt">Recent bookings</div><div class="actions"><button class="btn p" onclick="openNewBooking()"><i class="ti ti-plus"></i> New Booking</button></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Guest</th><th>Activity</th><th>Operator</th><th>Date</th><th>Pax</th><th>MYR</th><th>Pay method</th><th>Status</th><th>Payment</th><th>Actions</th></tr></thead><tbody id="dash-tbody"></tbody></table></div>
+</div>
+
+<!-- ─── BOOKINGS ─── -->
+<div class="page" id="pg-bookings">
+  <div class="ph">
+    <div class="pt">All Bookings</div>
+    <div class="actions">
+      <div class="search-wrap"><i class="ti ti-search"></i><input type="text" class="fi" id="srch" placeholder="Search bookings…" style="width:180px" oninput="renderAll()"></div>
+      <button class="btn xl" onclick="doExport('bookings')"><i class="ti ti-file-spreadsheet"></i> Excel</button>
+      <button class="btn p" onclick="openNewBooking()"><i class="ti ti-plus"></i> Add</button>
+    </div>
+  </div>
+  <div class="chips" id="bk-chips">
+    <div class="chip act" onclick="setFilter('all',this,'bk-chips')">All (247)</div>
+    <div class="chip" onclick="setFilter('confirmed',this,'bk-chips')">Confirmed</div>
+    <div class="chip" onclick="setFilter('pending',this,'bk-chips')">Pending</div>
+    <div class="chip" onclick="setFilter('checkin',this,'bk-chips')">Checked in</div>
+    <div class="chip" onclick="setFilter('cancelled',this,'bk-chips')">Cancelled</div>
+    <div class="chip" onclick="setFilter('Island Hopping',this,'bk-chips')">Island Hopping</div>
+    <div class="chip" onclick="setFilter('Sunset Cruise',this,'bk-chips')">Sunset Cruise</div>
+    <div class="chip" onclick="setFilter('Fishing Trip',this,'bk-chips')">Fishing</div>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Guest</th><th>Phone</th><th>Activity</th><th>Operator</th><th>Date & time</th><th>Pax</th><th>MYR</th><th>Status</th><th>Payment</th><th>Method</th><th>Actions</th></tr></thead><tbody id="all-tbody"></tbody></table></div>
+</div>
+
+<!-- ─── PAYMENTS ─── -->
+<div class="page" id="pg-payments">
+  <div class="stats4">
+    <div class="stat"><div class="stat-lbl">Total collected</div><div class="stat-num">MYR 68,420</div><div class="stat-ch"><i class="ti ti-trending-up"></i> +18% this month</div></div>
+    <div class="stat"><div class="stat-lbl">Online gateway</div><div class="stat-num">MYR 42,180</div><div class="stat-ch">62% of revenue</div></div>
+    <div class="stat"><div class="stat-lbl">Pending balance</div><div class="stat-num">MYR 13,920</div><div class="stat-ch dn">38 bookings</div></div>
+    <div class="stat"><div class="stat-lbl">Refunds</div><div class="stat-num">MYR 2,400</div><div class="stat-ch">9 this month</div></div>
+  </div>
+  <div class="ph">
+    <div class="pt">Payment records</div>
+    <div class="actions">
+      <button class="btn wa" onclick="toast('Payment reminders sent to 38 guests','wa')"><i class="ti ti-brand-whatsapp"></i> Remind all unpaid</button>
+      <button class="btn xl" onclick="doExport('payments')"><i class="ti ti-file-spreadsheet"></i> Export Excel</button>
+    </div>
+  </div>
+  <div class="chips" id="pay-chips">
+    <div class="chip act" onclick="setFilter('all',this,'pay-chips');renderPay()">All</div>
+    <div class="chip" onclick="setFilter('paid',this,'pay-chips');renderPay('paid')">Paid</div>
+    <div class="chip" onclick="setFilter('partial',this,'pay-chips');renderPay('partial')">Partial</div>
+    <div class="chip" onclick="setFilter('unpaid',this,'pay-chips');renderPay('unpaid')">Unpaid</div>
+    <div class="chip" onclick="setFilter('refunded',this,'pay-chips');renderPay('refunded')">Refunded</div>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr><th>Booking ID</th><th>Guest</th><th>Activity</th><th>Total</th><th>Paid</th><th>Balance</th><th>Method</th><th>GW Reference</th><th>Pay status</th><th>Actions</th></tr></thead><tbody id="pay-tbody"></tbody></table></div>
+</div>
+
+<!-- ─── PAYMENT GATEWAY ─── -->
+<div class="page" id="pg-gateway">
+  <div class="stats4">
+    <div class="stat"><div class="stat-lbl"><i class="ti ti-building-bank"></i> FPX today</div><div class="stat-num">89</div><div class="stat-ch">MYR 26,700</div></div>
+    <div class="stat"><div class="stat-lbl"><i class="ti ti-credit-card"></i> Cards today</div><div class="stat-num">47</div><div class="stat-ch">MYR 14,100</div></div>
+    <div class="stat"><div class="stat-lbl"><i class="ti ti-wallet"></i> eWallet today</div><div class="stat-num">31</div><div class="stat-ch">MYR 6,820</div></div>
+    <div class="stat"><div class="stat-lbl"><i class="ti ti-x"></i> Failed</div><div class="stat-num">6</div><div class="stat-ch dn">MYR 1,380</div></div>
+  </div>
+  <div class="row2">
+    <div class="card"><div class="card-title">Process a payment <span style="font-size:10px;color:var(--tx3);font-weight:400">Manual / walk-in</span></div><div id="gw-form"></div></div>
+    <div class="card">
+      <div class="card-title">Live transaction feed <span style="font-size:10px;color:#22c55e;font-weight:400">● Live</span></div>
+      <div id="tx-feed"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Gateway configuration</div>
+    <div class="row3" style="margin:0">
+      <div class="gw-card"><div class="gw-card-hdr"><div style="display:flex;align-items:center;gap:7px"><i class="ti ti-building-bank" style="color:var(--ocean);font-size:16px"></i><span class="gw-card-name">FPX Online Banking</span></div><span class="pill pill-paid">Active</span></div><div style="font-size:11px;color:var(--tx2);margin-bottom:8px">Maybank2u · CIMB · RHB · Public Bank · AmBank · HSBC · Affin · BSN</div><button class="btn" style="font-size:10px;padding:4px 10px" onclick="toast('FPX settings opened','info')">Configure</button></div>
+      <div class="gw-card"><div class="gw-card-hdr"><div style="display:flex;align-items:center;gap:7px"><i class="ti ti-credit-card" style="color:#1e40af;font-size:16px"></i><span class="gw-card-name">Credit / Debit Card</span></div><span class="pill pill-paid">Active</span></div><div style="font-size:11px;color:var(--tx2);margin-bottom:8px">Visa · Mastercard · AMEX · UnionPay · JCB</div><button class="btn" style="font-size:10px;padding:4px 10px" onclick="toast('Card settings opened','info')">Configure</button></div>
+      <div class="gw-card"><div class="gw-card-hdr"><div style="display:flex;align-items:center;gap:7px"><i class="ti ti-wallet" style="color:#0ea5e9;font-size:16px"></i><span class="gw-card-name">eWallet</span></div><span class="pill pill-paid">Active</span></div><div style="font-size:11px;color:var(--tx2);margin-bottom:8px">Touch 'n Go · GrabPay · Boost · ShopeePay · MAE</div><button class="btn" style="font-size:10px;padding:4px 10px" onclick="toast('eWallet settings opened','info')">Configure</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── GUEST PORTAL ─── -->
+<div class="page" id="pg-guestportal">
+  <div class="ph"><div class="pt">Guest Self-Service Portal</div><div class="actions"><span style="font-size:11px;color:var(--tx3)">Public booking page for guests</span></div></div>
+  <div class="ptabs">
+    <button class="ptab act" id="ptab-book" onclick="switchPortal('book')">Book now</button>
+    <button class="ptab" id="ptab-lookup" onclick="switchPortal('lookup')">Find my booking</button>
+    <button class="ptab" id="ptab-paybal" onclick="switchPortal('paybal')">Pay balance</button>
+  </div>
+  <div id="portal-book"><div id="guestFormWrap"></div></div>
+  <div id="portal-lookup" style="display:none"><div id="lookupWrap"></div></div>
+  <div id="portal-paybal" style="display:none"><div id="paybalWrap"></div></div>
+</div>
+
+<!-- ─── WHATSAPP ─── -->
+<div class="page" id="pg-whatsapp">
+  <div class="row2">
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title"><i class="ti ti-brand-whatsapp" style="color:#16a34a;font-size:16px"></i> Send WhatsApp message</div>
+        <div style="margin-bottom:10px">
+          <label class="fl">Recipient phone</label>
+          <div style="display:flex;gap:7px"><input type="text" class="fi" id="wa-phone" value="+60 12-345 6789" style="flex:1" placeholder="+60 12-345 6789"><button class="btn" onclick="toast('Guest found','info')"><i class="ti ti-search"></i></button></div>
+        </div>
+        <div style="margin-bottom:10px"><label class="fl">Booking ID</label><input type="text" class="fi" id="wa-bkid" value="BK-2847" placeholder="BK-XXXX"></div>
+        <div style="margin-bottom:12px">
+          <label class="fl">Message template</label>
+          <div class="tpl-grid">
+            <div class="tpl-card sel" id="tpl-confirm" onclick="selTpl('confirm',this)"><div class="tpl-name">Booking confirmation</div><div class="tpl-desc">Send booking details & meeting point</div></div>
+            <div class="tpl-card" id="tpl-reminder" onclick="selTpl('reminder',this)"><div class="tpl-name">Payment reminder</div><div class="tpl-desc">Outstanding balance follow-up</div></div>
+            <div class="tpl-card" id="tpl-checkin" onclick="selTpl('checkin',this)"><div class="tpl-name">Check-in reminder</div><div class="tpl-desc">Day-before trip reminder</div></div>
+            <div class="tpl-card" id="tpl-review" onclick="selTpl('review',this)"><div class="tpl-name">Review request</div><div class="tpl-desc">Post-trip feedback link</div></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <button class="btn wa" onclick="previewWA()"><i class="ti ti-eye"></i> Preview</button>
+          <button class="btn wa" onclick="sendWA()"><i class="ti ti-send"></i> Send message</button>
+          <button class="btn" onclick="toast('Bulk send: select bookings from Bookings tab first','info')"><i class="ti ti-users"></i> Bulk send</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Stats today</div>
+        <div class="was4">
+          <div class="was"><div class="was-n">142</div><div class="was-l">Sent</div></div>
+          <div class="was"><div class="was-n">138</div><div class="was-l">Delivered</div></div>
+          <div class="was"><div class="was-n">119</div><div class="was-l">Read</div></div>
+          <div class="was"><div class="was-n">43</div><div class="was-l">Replied</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Message preview <span id="tpl-label" style="font-size:10px;color:var(--tx3);font-weight:400">Booking confirmation</span></div>
+      <div style="background:var(--bg2);border-radius:var(--r12);padding:14px;margin-bottom:12px">
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">To: <span id="wa-to">+60 12-345 6789</span></div>
+        <div class="wa-bubble" id="wa-bubble">🌊 *Booking Confirmed!*
+
+Hello Ahmad Razali,
+
+Your booking *BK-2847* is confirmed.
+
+📍 *Activity:* Island Hopping
+🚢 *Operator:* Andaman Sea Adventures
+📅 *Date:* 8 May 2026
+⏰ *Departure:* 09:00 AM
+👥 *Pax:* 4 adults
+💰 *Total:* MYR 600
+
+*Meeting point:* Telaga Harbour Jetty
+Arrive 15 minutes early.
+
+Thank you! 🏝️</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-check" style="font-size:11px"></i> Preview — not sent yet</div>
+      </div>
+      <div class="card-title">Recent messages</div>
+      <div id="wa-recent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── EXPORT ─── -->
+<div class="page" id="pg-export">
+  <div class="ph"><div class="pt">Export to Excel / CSV</div></div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title"><i class="ti ti-file-spreadsheet" style="color:#16a34a"></i> Quick export</div>
+    <div class="exp-grid" id="exp-grid">
+      <div class="exp-opt" onclick="doExport('bookings')"><i class="ti ti-calendar-check"></i><div><div class="exp-name">All bookings</div><div class="exp-desc">247 records · guest, activity, date, pax, status</div></div></div>
+      <div class="exp-opt" onclick="doExport('payments')"><i class="ti ti-credit-card"></i><div><div class="exp-name">Payment report</div><div class="exp-desc">Amounts, methods, balances, gateway refs</div></div></div>
+      <div class="exp-opt" onclick="doExport('operators')"><i class="ti ti-users"></i><div><div class="exp-name">Operator summary</div><div class="exp-desc">10 operators · revenue, bookings, ratings</div></div></div>
+      <div class="exp-opt" onclick="doExport('activities')"><i class="ti ti-boat"></i><div><div class="exp-name">Activity breakdown</div><div class="exp-desc">Per-activity stats, pax, revenue</div></div></div>
+      <div class="exp-opt" onclick="doExport('monthly')"><i class="ti ti-chart-bar"></i><div><div class="exp-name">Monthly report</div><div class="exp-desc">May 2026 · daily revenue & pax totals</div></div></div>
+      <div class="exp-opt" onclick="doExport('whatsapp')"><i class="ti ti-brand-whatsapp"></i><div><div class="exp-name">WhatsApp log</div><div class="exp-desc">Message history, status, templates</div></div></div>
+    </div>
+    <div id="exp-prog" style="display:none;margin-top:6px"><div style="font-size:11px;color:var(--tx2);margin-bottom:4px" id="exp-lbl">Preparing…</div><div class="prog-bar"><div class="prog-fill" id="exp-fill" style="width:0%"></div></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Custom export</div>
+    <div class="fg">
+      <div><label class="fl">Date from</label><input type="date" class="fi" value="2026-05-01"></div>
+      <div><label class="fl">Date to</label><input type="date" class="fi" value="2026-05-07"></div>
+      <div><label class="fl">Activity</label><select class="fs"><option>All activities</option><option>Island Hopping</option><option>Sunset Cruise</option><option>Day Cruise</option><option>Half Day Cruise</option><option>Fishing Trip</option><option>Snorkeling</option><option>Private Charter</option></select></div>
+      <div><label class="fl">Operator</label><select class="fs"><option>All operators</option><option>Langkawi Pearl Cruises</option><option>Andaman Sea Adventures</option><option>Blue Water Yacht Charter</option><option>Sunset Horizon Boats</option><option>Sea Eagle Charters</option></select></div>
+      <div><label class="fl">Payment status</label><select class="fs"><option>All</option><option>Paid</option><option>Partial</option><option>Unpaid</option><option>Refunded</option></select></div>
+      <div><label class="fl">Format</label><select class="fs"><option>.xlsx (Excel)</option><option>.csv (comma)</option><option>.csv (semicolon)</option></select></div>
+    </div>
+    <button class="btn xl btn-full" onclick="doExport('custom')"><i class="ti ti-download"></i> Export custom report</button>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="card-title">Recent exports</div>
+    <div id="exp-history"></div>
+  </div>
+</div>
+
+<!-- ─── OPERATORS ─── -->
+<div class="page" id="pg-operators">
+  <div class="ph"><div class="pt">Service Providers (10 Operators)</div><div class="actions"><button class="btn xl" onclick="doExport('operators')"><i class="ti ti-file-spreadsheet"></i> Export</button></div></div>
+  <div class="ops-grid" id="ops-grid"></div>
+</div>
+
+</main>
+</div><!-- .app -->
+
+<!-- ═══════════════ NEW BOOKING MODAL ═══════════════ -->
+<div class="overlay" id="modal-newbooking">
+<div class="modal">
+  <div class="mhead"><span class="mtitle"><i class="ti ti-plus" style="font-size:14px;vertical-align:-2px;margin-right:4px"></i>New Booking</span><button class="mclose" onclick="closeModal('modal-newbooking')"><i class="ti ti-x"></i></button></div>
+  <div class="fg">
+    <div><label class="fl">Guest name</label><input class="fi" type="text" id="nb-name" placeholder="Full name"></div>
+    <div><label class="fl">WhatsApp / phone</label><input class="fi" type="text" id="nb-phone" placeholder="+60 12-345 6789"></div>
+    <div><label class="fl">Activity</label><select class="fs" id="nb-act"><option>Island Hopping</option><option>Sunset Cruise</option><option>Day Cruise</option><option>Half Day Cruise</option><option>Fishing Trip</option><option>Snorkeling Tour</option><option>Private Charter</option><option>Mangrove Tour</option></select></div>
+    <div><label class="fl">Operator</label><select class="fs" id="nb-op"><option>Langkawi Pearl Cruises</option><option>Andaman Sea Adventures</option><option>Blue Water Yacht Charter</option><option>Sunset Horizon Boats</option><option>Sea Eagle Charters</option><option>Island Breeze Tours</option><option>Coral Bay Cruises</option><option>Telaga Harbour Marina</option><option>Kilim River Eco Tour</option><option>Cenang Beach Marine</option></select></div>
+    <div><label class="fl">Date</label><input class="fi" type="date" id="nb-date" value="2026-05-08"></div>
+    <div><label class="fl">Departure time</label><select class="fs" id="nb-time"><option>07:00 AM</option><option>08:00 AM</option><option>09:00 AM</option><option>10:00 AM</option><option>02:00 PM</option><option>04:00 PM</option><option>05:30 PM</option></select></div>
+    <div><label class="fl">Adults</label><input class="fi" type="number" id="nb-adults" value="2" min="1" oninput="calcNB()"></div>
+    <div><label class="fl">Children</label><input class="fi" type="number" id="nb-children" value="0" min="0" oninput="calcNB()"></div>
+    <div style="grid-column:1/-1"><label class="fl">Payment method</label><select class="fs" id="nb-paymethod"><option>FPX Online Banking</option><option>Credit Card</option><option>eWallet (TNG/GrabPay)</option><option>Cash on arrival</option><option>Partial deposit</option></select></div>
+    <div style="grid-column:1/-1"><label class="fl">Special requests</label><input class="fi" type="text" id="nb-note" placeholder="Dietary, birthday, accessibility…"></div>
+  </div>
+  <div class="pay-box">
+    <div class="pay-row"><span>Rate per adult</span><span>MYR 150</span></div>
+    <div class="pay-row"><span>Rate per child</span><span>MYR 80</span></div>
+    <div class="pay-tot"><span id="nb-subtotal-lbl">Subtotal (2 adults)</span><span id="nb-total">MYR 300</span></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><input type="checkbox" id="nb-sendwa" checked style="width:14px;height:14px"><label for="nb-sendwa" style="font-size:12px;color:var(--tx2)">Auto-send WhatsApp confirmation</label></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end">
+    <button class="btn" onclick="closeModal('modal-newbooking')">Cancel</button>
+    <button class="btn p" onclick="submitNB()"><i class="ti ti-check"></i> Confirm Booking</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ BOOKING DETAIL MODAL ═══════════════ -->
+<div class="overlay" id="modal-detail">
+<div class="modal">
+  <div class="mhead"><span class="mtitle" id="detail-title">Booking detail</span><button class="mclose" onclick="closeModal('modal-detail')"><i class="ti ti-x"></i></button></div>
+  <div id="detail-body"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px" id="detail-actions"></div>
+</div>
+</div>
+
+<!-- ═══════════════ TOAST WRAPPER ═══════════════ -->
+<div id="toast-wrap" aria-live="polite"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════
+const OPS=[
+  {name:"Langkawi Pearl Cruises",sh:"LP",col:"#0369a1",type:"Luxury Yacht",boats:4,bk:52,rev:18200,rat:4.9},
+  {name:"Andaman Sea Adventures",sh:"AS",col:"#ea580c",type:"Island Hopping",boats:6,bk:48,rev:14400,rat:4.8},
+  {name:"Blue Water Yacht Charter",sh:"BW",col:"#0891b2",type:"Private Charter",boats:3,bk:31,rev:12700,rat:4.7},
+  {name:"Sunset Horizon Boats",sh:"SH",col:"#d97706",type:"Sunset Cruise",boats:5,bk:39,rev:11700,rat:4.9},
+  {name:"Sea Eagle Charters",sh:"SE",col:"#0f766e",type:"Sport Fishing",boats:4,bk:26,rev:9100,rat:4.6},
+  {name:"Island Breeze Tours",sh:"IB",col:"#7c3aed",type:"Multi-Activity",boats:7,bk:44,rev:13200,rat:4.7},
+  {name:"Coral Bay Cruises",sh:"CB",col:"#0ea5e9",type:"Snorkeling",boats:3,bk:19,rev:5700,rat:4.5},
+  {name:"Telaga Harbour Marina",sh:"TH",col:"#4338ca",type:"Marina Services",boats:8,bk:35,rev:10500,rat:4.8},
+  {name:"Kilim River Eco Tour",sh:"KR",col:"#65a30d",type:"Eco Tour",boats:5,bk:22,rev:6600,rat:4.6},
+  {name:"Cenang Beach Marine",sh:"CM",col:"#dc2626",type:"Beach Activity",boats:9,bk:41,rev:12300,rat:4.7}
+];
+const ACTS=["Island Hopping","Sunset Cruise","Day Cruise","Half Day Cruise","Fishing Trip","Snorkeling Tour","Private Charter","Mangrove Tour"];
+const TIMES=["07:00 AM","08:00 AM","09:00 AM","10:00 AM","02:00 PM","04:00 PM","05:30 PM","06:00 PM"];
+const BSTATS=["confirmed","confirmed","confirmed","confirmed","pending","checkin","cancelled"];
+const PMETH=["FPX","Credit Card","eWallet","Cash","Deposit"];
+const PSTATS=["paid","paid","paid","paid","paid","partial","partial","unpaid","unpaid","refunded"];
+const GUESTS=["Ahmad Razali","Nurul Ain","Lee Chong Wei","Priya Sharma","Tom Harrison","Sarah Lim","Ravi Kumar","Mei Lin","Carlos Diaz","Emma Walsh","John Smith","Fatimah Bt Ali","Wang Fang","David Brown","Siti Norzah"];
+const PHONES=["+60 12-345 6789","+60 11-2233 4455","+60 16-789 0123","+60 17-334 5566","+44 7700 900123","+65 9123 4567","+91 98765 43210","+60 13-456 7890","+34 612 345 678","+1 415 555 0172"];
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function gwRef(){return "GW"+Math.random().toString(36).substr(2,8).toUpperCase();}
+let bookings=[];
+for(let i=0;i<50;i++){
+  const op=OPS[rnd(0,9)];const pax=rnd(1,14);const total=pax*rnd(80,280);
+  const ps=PSTATS[rnd(0,9)];
+  bookings.push({id:"BK-"+(2800+i),guest:GUESTS[rnd(0,14)],phone:PHONES[rnd(0,9)],activity:ACTS[rnd(0,7)],op:op.name,opCol:op.col,date:"2026-05-0"+(rnd(5,9)),time:TIMES[rnd(0,7)],pax,total,paid:ps==='paid'?total:ps==='partial'?Math.round(total*.5):0,balance:ps==='paid'?0:ps==='partial'?Math.round(total*.5):total,payStatus:ps,payMethod:PMETH[rnd(0,4)],gwRef:gwRef(),status:BSTATS[rnd(0,6)]});
+}
+// ═══════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════
+const SL={confirmed:"Confirmed",pending:"Pending",checkin:"Checked in",cancelled:"Cancelled"};
+const PL={paid:"Paid",partial:"Partial",unpaid:"Unpaid",refunded:"Refunded"};
+const PC={confirmed:"pill-conf",pending:"pill-pend",checkin:"pill-cin",cancelled:"pill-canc",paid:"pill-paid",partial:"pill-part",unpaid:"pill-unp",refunded:"pill-ref"};
+function pSt(s){return`<span class="pill ${PC[s]}">${SL[s]||s}</span>`;}
+function pPay(s){return`<span class="pill ${PC[s]}">${PL[s]||s}</span>`;}
+function actBtns(b){
+  return`<div style="display:flex;gap:4px">
+    <button class="btn" style="padding:3px 7px;font-size:10px" onclick="openDetail('${b.id}')"><i class="ti ti-eye"></i></button>
+    <button class="btn wa" style="padding:3px 7px;font-size:10px" onclick="quickWA('${b.id}','${b.guest}','${b.phone}')"><i class="ti ti-brand-whatsapp"></i></button>
+    ${b.payStatus!=='paid'?`<button class="btn g" style="padding:3px 7px;font-size:10px" onclick="openGW('${b.id}')"><i class="ti ti-credit-card"></i></button>`:''}
+  </div>`;
+}
+let curBF='all', curPF='all';
+// ═══════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════
+function nav(page, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('act'));
+  document.getElementById('pg-'+page).classList.add('act');
+  document.querySelectorAll('.tnb').forEach(b=>b.classList.remove('act'));
+  if(btn)btn.classList.add('act');
+  document.querySelectorAll('.sitem').forEach(s=>s.classList.remove('act'));
+  if(page==='bookings')renderAll();
+  if(page==='payments')renderPay();
+  if(page==='gateway')renderGWForm();
+  if(page==='operators')renderOps();
+  if(page==='guestportal')renderGuestForm();
+  if(page==='whatsapp')renderWARecent();
+  if(page==='export')renderExpHistory();
+}
+function filterAct(act){curBF=act;nav('bookings',document.querySelectorAll('.tnb')[1]);}
+function filterPay(ps){curPF=ps;nav('payments',document.querySelectorAll('.tnb')[2]);}
+// ═══════════════════════════════════════════════
+//  DASHBOARD RENDER
+// ═══════════════════════════════════════════════
+function renderDash(){
+  // activity bars
+  const acts=[{n:'Island Hopping',c:63,col:'#ea580c'},{n:'Half Day Cruise',c:51,col:OPS[0].col},{n:'Sunset Cruise',c:42,col:OPS[3].col},{n:'Day Cruise',c:38,col:'#0891b2'},{n:'Fishing Trip',c:29,col:OPS[4].col},{n:'Snorkeling',c:14,col:'#0ea5e9'},{n:'Private Charter',c:10,col:'#7c3aed'}];
+  document.getElementById('dash-actbkdn').innerHTML=acts.map(a=>`<div class="act-li"><span class="act-dot" style="background:${a.col}"></span>${a.n}<div class="act-bar-wrap"><div class="act-bar-fill" style="width:${a.c}%;background:${a.col}"></div></div><span class="act-num">${a.c}</span></div>`).join('');
+  // rev bars
+  const revData=[{l:'Mon',h:52,c:'#93c5fd'},{l:'Tue',h:68,c:'#60a5fa'},{l:'Wed',h:44,c:'#93c5fd'},{l:'Thu ●',h:88,c:OPS[0].col},{l:'Fri',h:28,c:'#bfdbfe'},{l:'Sat',h:18,c:'#dbeafe'},{l:'Sun',h:8,c:'#eff6ff'}];
+  document.getElementById('dash-rev').innerHTML=revData.map(r=>`<div class="rbc"><div class="rbb" style="height:${r.h}px;background:${r.c}"></div><div class="rbl">${r.l}</div></div>`).join('');
+  // table
+  const tbody=document.getElementById('dash-tbody');
+  tbody.innerHTML=bookings.slice(0,10).map(b=>`<tr>
+    <td style="font-weight:600;color:var(--ocean);cursor:pointer;font-family:var(--font-head)" onclick="openDetail('${b.id}')">${b.id}</td>
+    <td>${b.guest}</td><td>${b.activity}</td>
+    <td><span class="op-tag" style="border-left-color:${b.opCol}">${b.op.split(' ').slice(0,2).join(' ')}</span></td>
+    <td style="white-space:nowrap">${b.date}</td><td style="text-align:center;font-weight:600">${b.pax}</td>
+    <td style="font-weight:600;font-family:var(--font-head)">${b.total.toLocaleString()}</td>
+    <td style="font-size:11px">${b.payMethod}</td>
+    <td>${pSt(b.status)}</td><td>${pPay(b.payStatus)}</td>
+    <td>${actBtns(b)}</td></tr>`).join('');
+}
+// ═══════════════════════════════════════════════
+//  ALL BOOKINGS
+// ═══════════════════════════════════════════════
+function renderAll(){
+  const s=(document.getElementById('srch')||{value:''}).value.toLowerCase();
+  let rows=bookings;
+  if(curBF==='all'){}
+  else if(['confirmed','pending','checkin','cancelled'].includes(curBF))rows=rows.filter(b=>b.status===curBF);
+  else rows=rows.filter(b=>b.activity===curBF);
+  if(s)rows=rows.filter(b=>b.guest.toLowerCase().includes(s)||b.id.toLowerCase().includes(s)||b.activity.toLowerCase().includes(s)||b.op.toLowerCase().includes(s));
+  document.getElementById('all-tbody').innerHTML=rows.map(b=>`<tr>
+    <td style="font-weight:600;color:var(--ocean);cursor:pointer;font-family:var(--font-head)" onclick="openDetail('${b.id}')">${b.id}</td>
+    <td>${b.guest}</td><td style="color:var(--tx3);font-size:11px">${b.phone}</td><td>${b.activity}</td>
+    <td><span class="op-tag" style="border-left-color:${b.opCol}">${b.op.split(' ').slice(0,2).join(' ')}</span></td>
+    <td style="white-space:nowrap;font-size:11px">${b.date} ${b.time}</td>
+    <td style="text-align:center;font-weight:600">${b.pax}</td><td style="font-weight:600;font-family:var(--font-head)">${b.total.toLocaleString()}</td>
+    <td>${pSt(b.status)}</td><td>${pPay(b.payStatus)}</td>
+    <td style="font-size:11px">${b.payMethod}</td>
+    <td>${actBtns(b)}</td></tr>`).join('');
+}
+function setFilter(f, el, chipId){
+  curBF=f; curPF=f;
+  document.querySelectorAll('#'+chipId+' .chip').forEach(c=>c.classList.remove('act'));
+  el.classList.add('act');
+  renderAll();
+}
+// ═══════════════════════════════════════════════
+//  PAYMENTS
+// ═══════════════════════════════════════════════
+function renderPay(filter){
+  const f=filter||curPF;
+  let rows=bookings;
+  if(f&&f!=='all')rows=rows.filter(b=>b.payStatus===f);
+  document.getElementById('pay-tbody').innerHTML=rows.map(b=>`<tr>
+    <td style="font-weight:600;color:var(--ocean);cursor:pointer;font-family:var(--font-head)" onclick="openDetail('${b.id}')">${b.id}</td>
+    <td>${b.guest}</td><td>${b.activity}</td>
+    <td style="font-weight:600;font-family:var(--font-head)">${b.total.toLocaleString()}</td>
+    <td style="color:#16a34a;font-weight:600">${b.paid.toLocaleString()}</td>
+    <td style="color:${b.balance>0?'#dc2626':'var(--tx3)'};font-weight:${b.balance>0?600:400}">${b.balance.toLocaleString()}</td>
+    <td style="font-size:11px">${b.payMethod}</td>
+    <td style="font-size:10px;color:var(--tx3);font-family:var(--font-head)">${b.gwRef}</td>
+    <td>${pPay(b.payStatus)}</td>
+    <td><div style="display:flex;gap:4px">
+      ${b.payStatus!=='paid'?`<button class="btn g" style="padding:3px 8px;font-size:10px" onclick="openGW('${b.id}')"><i class="ti ti-credit-card"></i> Pay</button>`:''}
+      ${b.payStatus!=='paid'?`<button class="btn p" style="padding:3px 7px;font-size:10px" onclick="markPaid('${b.id}')"><i class="ti ti-check"></i></button>`:''}
+    </div></td></tr>`).join('');
+}
+function markPaid(id){
+  const b=bookings.find(x=>x.id===id);if(!b)return;
+  b.paid=b.total;b.balance=0;b.payStatus='paid';
+  renderDash();renderAll();renderPay();
+  toast(id+' marked as paid','ok');
+}
+// ═══════════════════════════════════════════════
+//  BOOKING DETAIL
+// ═══════════════════════════════════════════════
+function openDetail(id){
+  const b=bookings.find(x=>x.id===id);if(!b)return;
+  document.getElementById('detail-title').textContent=b.id+' — '+b.guest;
+  document.getElementById('detail-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:12px;margin-bottom:14px">
+      <div style="color:var(--tx2);padding:5px 0;border-bottom:1px solid var(--br)">Activity</div><div style="padding:5px 0;border-bottom:1px solid var(--br);font-weight:500">${b.activity}</div>
+      <div style="color:var(--tx2);padding:5px 0;border-bottom:1px solid var(--br)">Operator</div><div style="padding:5px 0;border-bottom:1px solid var(--br)">${b.op}</div>
+      <div style="color:var(--tx2);padding:5px 0;border-bottom:1px solid var(--br)">Date & time</div><div style="padding:5px 0;border-bottom:1px solid var(--br)">${b.date} ${b.time}</div>
+      <div style="color:var(--tx2);padding:5px 0;border-bottom:1px solid var(--br)">Passengers</div><div style="padding:5px 0;border-bottom:1px solid var(--br);font-weight:600">${b.pax} guests</div>
+      <div style="color:var(--tx2);padding:5px 0;border-bottom:1px solid var(--br)">Phone</div><div style="padding:5px 0;border-bottom:1px solid var(--br);color:var(--ocean)">${b.phone}</div>
+      <div style="color:var(--tx2);padding:5px 0;border-bottom:1px solid var(--br)">Pay method</div><div style="padding:5px 0;border-bottom:1px solid var(--br)">${b.payMethod}</div>
+      <div style="color:var(--tx2);padding:5px 0;border-bottom:1px solid var(--br)">Total</div><div style="padding:5px 0;border-bottom:1px solid var(--br);font-weight:700;font-family:var(--font-head)">MYR ${b.total.toLocaleString()}</div>
+      <div style="color:var(--tx2);padding:5px 0;border-bottom:1px solid var(--br)">Paid</div><div style="padding:5px 0;border-bottom:1px solid var(--br);color:#16a34a;font-weight:600">MYR ${b.paid.toLocaleString()}</div>
+      <div style="color:var(--tx2);padding:5px 0;border-bottom:1px solid var(--br)">Balance</div><div style="padding:5px 0;border-bottom:1px solid var(--br);color:${b.balance>0?'#dc2626':'var(--tx3)'};font-weight:${b.balance>0?600:400}">MYR ${b.balance.toLocaleString()}</div>
+      <div style="color:var(--tx2);padding:5px 0">Booking status</div><div style="padding:5px 0">${pSt(b.status)}</div>
+      <div style="color:var(--tx2);padding:5px 0">Payment</div><div style="padding:5px 0">${pPay(b.payStatus)}</div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">
+      <span style="font-size:10px;padding:2px 8px;background:var(--bg2);border-radius:99px;border:1px solid var(--br)"><i class="ti ti-map-pin" style="font-size:10px"></i> Telaga Harbour Jetty</span>
+      <span style="font-size:10px;padding:2px 8px;background:var(--bg2);border-radius:99px;border:1px solid var(--br)"><i class="ti ti-life-buoy" style="font-size:10px"></i> Life jacket included</span>
+      <span style="font-size:10px;padding:2px 8px;background:var(--bg2);border-radius:99px;border:1px solid var(--br)">GW Ref: ${b.gwRef}</span>
+    </div>`;
+  document.getElementById('detail-actions').innerHTML=`
+    <button class="btn" onclick="closeModal('modal-detail')">Close</button>
+    <button class="btn wa" onclick="quickWA('${b.id}','${b.guest}','${b.phone}');closeModal('modal-detail')"><i class="ti ti-brand-whatsapp"></i> Send WA</button>
+    ${b.payStatus!=='paid'?`<button class="btn g" onclick="openGW('${b.id}');closeModal('modal-detail')"><i class="ti ti-credit-card"></i> Process payment</button>`:''}
+    ${b.payStatus!=='paid'?`<button class="btn p" onclick="markPaid('${b.id}');closeModal('modal-detail')"><i class="ti ti-check"></i> Mark paid</button>`:''}`;
+  document.getElementById('modal-detail').classList.add('open');
+}
+// ═══════════════════════════════════════════════
+//  NEW BOOKING
+// ═══════════════════════════════════════════════
+function openNewBooking(){document.getElementById('modal-newbooking').classList.add('open');}
+function calcNB(){
+  const a=parseInt(document.getElementById('nb-adults').value)||0;
+  const c=parseInt(document.getElementById('nb-children').value)||0;
+  const t=a*150+c*80;
+  document.getElementById('nb-total').textContent='MYR '+t.toLocaleString();
+  document.getElementById('nb-subtotal-lbl').textContent=`Subtotal (${a+c} pax)`;
+}
+function submitNB(){
+  const gn=document.getElementById('nb-name').value||'Walk-in Guest';
+  const ph=document.getElementById('nb-phone').value||'+60 00-000 0000';
+  const a=parseInt(document.getElementById('nb-adults').value)||2;
+  const c=parseInt(document.getElementById('nb-children').value)||0;
+  const total=a*150+c*80;
+  const opName=document.getElementById('nb-op').value;
+  const op=OPS.find(o=>o.name===opName)||OPS[0];
+  const nb={id:"BK-"+(2850+bookings.length),guest:gn,phone:ph,activity:document.getElementById('nb-act').value,op:opName,opCol:op.col,date:document.getElementById('nb-date').value,time:document.getElementById('nb-time').value,pax:a+c,total,paid:0,balance:total,payStatus:'unpaid',payMethod:document.getElementById('nb-paymethod').value,gwRef:gwRef(),status:'pending'};
+  bookings.unshift(nb);
+  closeModal('modal-newbooking');
+  renderDash();
+  toast('Booking '+nb.id+' created!','ok');
+  if(document.getElementById('nb-sendwa').checked)setTimeout(()=>toast('WhatsApp confirmation queued for '+gn,'wa'),700);
+}
+// ═══════════════════════════════════════════════
+//  PAYMENT GATEWAY
+// ═══════════════════════════════════════════════
+let gwBkId='',gwMethod='',gwBank='';
+function renderGWForm(){
+  const b=gwBkId?bookings.find(x=>x.id===gwBkId):null;
+  const banks=[{n:'Maybank2u',col:'#f59e0b'},{n:'CIMB Clicks',col:'#dc2626'},{n:'RHB Now',col:OPS[0].col},{n:'Public Bank',col:'#1e40af'},{n:'AmOnline',col:'#ea580c'},{n:'HSBC',col:'#dc2626'},{n:'Affin Bank',col:'#0f766e'},{n:'BSN',col:'#1e40af'}];
+  const wallets=[{n:"TNG",col:'#0ea5e9'},{n:'GrabPay',col:'#00b14f'},{n:'Boost',col:'#e879a0'},{n:'ShopeePay',col:'#ea580c'},{n:'MAE',col:OPS[3].col}];
+  document.getElementById('gw-form').innerHTML=`
+    <div style="margin-bottom:10px">
+      <label class="fl">Booking ID</label>
+      <div style="display:flex;gap:7px"><input class="fi" type="text" id="gw-bkid" value="${gwBkId}" placeholder="BK-XXXX" style="flex:1" oninput="gwBkId=this.value"><button class="btn" onclick="lookupGWBk()"><i class="ti ti-search"></i></button></div>
+      ${b?`<div style="margin-top:6px;background:var(--bg2);border-radius:var(--r8);padding:8px 10px;font-size:11px"><div style="font-weight:600;font-family:var(--font-head)">${b.guest} · ${b.activity}</div><div style="color:${b.balance>0?'#dc2626':'#16a34a'};margin-top:2px">Outstanding: <strong>MYR ${b.balance.toLocaleString()}</strong></div></div>`:''}
+    </div>
+    <label class="fl">Payment method</label>
+    <div class="meth-grid">
+      <div class="mcard ${gwMethod==='fpx'?'sel':''}" onclick="gwMethod='fpx';renderGWForm()"><div class="mcard-ic"><i class="ti ti-building-bank" style="color:var(--ocean);font-size:22px"></i></div><div class="mcard-nm">FPX</div><div class="mcard-sb">Online banking</div></div>
+      <div class="mcard ${gwMethod==='card'?'sel':''}" onclick="gwMethod='card';renderGWForm()"><div class="mcard-ic"><i class="ti ti-credit-card" style="color:#1e40af;font-size:22px"></i></div><div class="mcard-nm">Card</div><div class="mcard-sb">Visa / MC / AMEX</div></div>
+      <div class="mcard ${gwMethod==='ewallet'?'sel':''}" onclick="gwMethod='ewallet';renderGWForm()"><div class="mcard-ic"><i class="ti ti-wallet" style="color:#0ea5e9;font-size:22px"></i></div><div class="mcard-nm">eWallet</div><div class="mcard-sb">TNG · Grab · Boost</div></div>
+    </div>
+    ${gwMethod==='fpx'?`<label class="fl">Select bank</label><div class="bank-grid">${banks.map(bk=>`<div class="bk ${gwBank===bk.n?'sel':''}" onclick="gwBank='${bk.n}';renderGWForm()"><div class="bk-dot" style="background:${bk.col}">${bk.n.substring(0,2)}</div>${bk.n}</div>`).join('')}</div>`:''}
+    ${gwMethod==='card'?`<div style="margin-bottom:10px"><div class="ci" style="margin-bottom:6px"><i class="ti ti-credit-card"></i><input class="fi" type="text" placeholder="1234  5678  9012  3456"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:6px"><input class="fi" type="text" placeholder="MM / YY"><input class="fi" type="text" placeholder="CVV"></div><input class="fi" type="text" placeholder="Cardholder name"></div>`:''}
+    ${gwMethod==='ewallet'?`<div class="bank-grid" style="margin-bottom:12px">${wallets.map(w=>`<div class="bk ${gwBank===w.n?'sel':''}" onclick="gwBank='${w.n}';renderGWForm()"><div class="bk-dot" style="background:${w.col}">${w.n.substring(0,2)}</div>${w.n}</div>`).join('')}</div>`:''}
+    ${gwMethod?`<button class="btn p btn-full" onclick="processPayment()"><i class="ti ti-lock"></i> Process payment${b&&b.balance>0?' (MYR '+b.balance.toLocaleString()+')':''}</button>`:`<div style="text-align:center;font-size:11px;color:var(--tx3);padding:8px">Select a payment method above</div>`}`;
+  renderTxFeed();
+}
+function lookupGWBk(){gwBkId=document.getElementById('gw-bkid').value;renderGWForm();const b=bookings.find(x=>x.id===gwBkId);toast(b?'Found: '+b.guest+' — MYR '+b.balance+' outstanding':'Booking not found',b?'info':'warn');}
+function openGW(id){gwBkId=id;gwMethod='fpx';gwBank='';nav('gateway',document.querySelectorAll('.tnb')[3]);setTimeout(renderGWForm,60);}
+function processPayment(){
+  const b=bookings.find(x=>x.id===gwBkId);
+  if(!b){toast('Enter a booking ID first','warn');return;}
+  if(!gwMethod){toast('Select a payment method','warn');return;}
+  if((gwMethod==='fpx'||gwMethod==='ewallet')&&!gwBank){toast('Select a bank / wallet','warn');return;}
+  document.getElementById('gw-form').innerHTML=`<div class="processing"><div class="spin"></div><div style="font-weight:600;font-family:var(--font-head);margin-bottom:4px">Processing…</div><div style="font-size:11px;color:var(--tx2)">${gwMethod==='fpx'?'Connecting to '+gwBank:gwMethod==='card'?'Authorising card':'Opening '+gwBank}</div><div style="font-size:11px;color:var(--tx2);margin-top:3px">MYR ${b.balance.toLocaleString()} · ${b.id}</div></div>`;
+  setTimeout(()=>{
+    markPaid(gwBkId);
+    const ref=gwRef();b.gwRef=ref;
+    document.getElementById('gw-form').innerHTML=`<div style="text-align:center;padding:20px 10px">
+      <div class="success-circle"><i class="ti ti-check"></i></div>
+      <div style="font-size:15px;font-weight:700;font-family:var(--font-head);margin-bottom:4px">Payment successful!</div>
+      <div class="receipt">
+        <div class="receipt-row"><span style="color:var(--tx2)">Booking</span><span style="font-weight:600;font-family:var(--font-head)">${b.id}</span></div>
+        <div class="receipt-row"><span style="color:var(--tx2)">Guest</span><span>${b.guest}</span></div>
+        <div class="receipt-row"><span style="color:var(--tx2)">Activity</span><span>${b.activity}</span></div>
+        <div class="receipt-row"><span style="color:var(--tx2)">Amount</span><span style="color:#16a34a;font-weight:700;font-family:var(--font-head)">MYR ${b.total.toLocaleString()}</span></div>
+        <div class="receipt-row"><span style="color:var(--tx2)">Method</span><span>${gwMethod==='fpx'?'FPX · '+gwBank:gwMethod==='card'?'Credit Card':'eWallet · '+gwBank}</span></div>
+        <div class="receipt-row"><span style="color:var(--tx2)">Ref</span><span style="font-size:10px;color:var(--tx3)">${ref}</span></div>
+      </div>
+      <div style="display:flex;gap:7px;justify-content:center;margin-top:12px">
+        <button class="btn wa" onclick="toast('Receipt sent via WhatsApp','wa')"><i class="ti ti-brand-whatsapp"></i> Send receipt</button>
+        <button class="btn" onclick="gwBkId='';gwMethod='';gwBank='';renderGWForm()"><i class="ti ti-plus"></i> New payment</button>
+      </div>
+    </div>`;
+    toast('Payment confirmed! Ref: '+ref,'ok');
+  },2200);
+}
+function renderTxFeed(){
+  const feed=[
+    {ref:'GW8A3F2C',g:'Ahmad Razali',amt:600,m:'FPX',b:'Maybank2u',ok:true,t:'2m ago'},
+    {ref:'GWBC5E9A',g:'Sarah Lim',amt:320,m:'eWallet',b:'TNG',ok:true,t:'5m ago'},
+    {ref:'GWD7F1B3',g:'Tom Harrison',amt:1200,m:'Card',b:'Visa',ok:true,t:'9m ago'},
+    {ref:'GW2C8E5F',g:'Priya Sharma',amt:480,m:'FPX',b:'CIMB',ok:true,t:'14m ago'},
+    {ref:'GW9A1D3F',g:'Ravi Kumar',amt:240,m:'eWallet',b:'GrabPay',ok:false,t:'18m ago'},
+  ];
+  if(!document.getElementById('tx-feed'))return;
+  document.getElementById('tx-feed').innerHTML=feed.map(tx=>`
+    <div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--br);font-size:11px">
+      <i class="ti ${tx.ok?'ti-check':'ti-x'}" style="font-size:13px;color:${tx.ok?'#16a34a':'#dc2626'}"></i>
+      <div style="flex:1"><div style="font-weight:500">${tx.g}</div><div style="color:var(--tx3)">${tx.m} · ${tx.b}</div></div>
+      <div style="text-align:right"><div style="font-weight:700;font-family:var(--font-head);color:${tx.ok?'#16a34a':'#dc2626'}">MYR ${tx.amt.toLocaleString()}</div><div style="color:var(--tx3);font-size:10px">${tx.t}</div></div>
+    </div>`).join('');
+}
+// ═══════════════════════════════════════════════
+//  GUEST PORTAL
+// ═══════════════════════════════════════════════
+const ACTIVITY_DATA=[
+  {name:'Island Hopping',icon:'ti-map-pin',dur:'4 hrs',price:150,desc:'Dayang Bunting · Beras Basah · Singa Besar',col:'#ea580c'},
+  {name:'Sunset Cruise',icon:'ti-sun',dur:'2.5 hrs',price:180,desc:'Golden hour on the Andaman Sea',col:OPS[3].col},
+  {name:'Day Cruise',icon:'ti-boat',dur:'8 hrs',price:220,desc:'Full day island exploration with lunch',col:OPS[0].col},
+  {name:'Half Day Cruise',icon:'ti-clock',dur:'4 hrs',price:130,desc:'Morning or afternoon sea adventure',col:'#0891b2'},
+  {name:'Fishing Trip',icon:'ti-fish',dur:'6 hrs',price:200,desc:'Deep sea & squid fishing with gear',col:OPS[4].col},
+  {name:'Snorkeling Tour',icon:'ti-wave-sine',dur:'3 hrs',price:120,desc:'Coral reefs & marine life up close',col:'#0ea5e9'},
+  {name:'Private Charter',icon:'ti-star',dur:'Custom',price:800,desc:'Entire vessel for your group',col:'#7c3aed'},
+  {name:'Mangrove Tour',icon:'ti-tree',dur:'3 hrs',price:100,desc:'Kilim Geoforest eco kayak & boat',col:'#65a30d'},
+];
+let gfStep=1,gfAct='',gfOp='',gfTime='',gfAdults=2,gfChildren=0,gfDate='2026-05-08';
+function renderGuestForm(){
+  const steps=['Activity','Operator','Date & Pax','Details','Payment'];
+  const bar=steps.map((s,i)=>`<button class="step-btn ${gfStep===i+1?'act':gfStep>i+1?'done':''}" onclick="${gfStep>i+1?`gfStep=${i+1};renderGuestForm()`:''}" style="${gfStep>i+1?'cursor:pointer':'cursor:default'}">${gfStep>i+1?'✓ ':''+(i+1)+'. '}${s}</button>`).join('');
+  let body='';
+  const slotsFull=['08:00 AM','02:00 PM'];
+  const slots=['07:00 AM','08:00 AM','09:00 AM','10:00 AM','02:00 PM','04:00 PM','05:30 PM'];
+  if(gfStep===1){
+    body=`<div class="act-cards">${ACTIVITY_DATA.map(a=>`<div class="acard ${gfAct===a.name?'sel':''}" onclick="gfAct='${a.name}';renderGuestForm()"><div class="acard-icon"><i class="ti ${a.icon}" style="color:${a.col};font-size:22px"></i></div><div class="acard-name">${a.name}</div><div class="acard-desc">${a.dur} · ${a.desc}</div><div class="acard-price">From MYR ${a.price} / pax</div></div>`).join('')}</div>
+    ${gfAct?`<button class="btn p btn-full" onclick="gfStep=2;renderGuestForm()">Continue with ${gfAct} <i class="ti ti-arrow-right"></i></button>`:'<div style="text-align:center;font-size:11px;color:var(--tx3);padding:6px">Select an activity to continue</div>'}`;
+  }else if(gfStep===2){
+    body=`<div class="op-cards">${OPS.slice(0,8).map(op=>`<div class="opcard ${gfOp===op.name?'sel':''}" onclick="gfOp='${op.name}';renderGuestForm()"><div class="opav" style="background:${op.col}">${op.sh}</div><div><div class="opname">${op.name}</div><div class="optype">${op.type}</div><div class="oprat"><i class="ti ti-star" style="font-size:10px"></i>${op.rat} · ${rnd(40,120)} reviews</div></div></div>`).join('')}</div>
+    <div style="display:flex;gap:8px"><button class="btn" onclick="gfStep=1;renderGuestForm()"><i class="ti ti-arrow-left"></i> Back</button>${gfOp?`<button class="btn p" style="flex:1;justify-content:center" onclick="gfStep=3;renderGuestForm()">Continue <i class="ti ti-arrow-right"></i></button>`:''}</div>`;
+  }else if(gfStep===3){
+    body=`<div style="margin-bottom:14px"><label class="fl">Departure date</label><input class="fi" type="date" value="${gfDate}" id="gf-date" oninput="gfDate=this.value" style="max-width:200px"></div>
+    <div style="margin-bottom:14px"><label class="fl">Select time slot</label><div class="time-grid">${slots.map(s=>`<div class="tslot ${slotsFull.includes(s)?'full':gfTime===s?'sel':''}" onclick="${!slotsFull.includes(s)?`gfTime='${s}';renderGuestForm()`:''}">${s}${slotsFull.includes(s)?' (full)':''}</div>`).join('')}</div></div>
+    <div style="margin-bottom:14px"><label class="fl">Passengers</label>
+      <div style="background:var(--surf);border:1px solid var(--br);border-radius:var(--r12);padding:4px 12px">
+        <div class="pax-row"><div><div style="font-size:13px;font-weight:500">Adults</div><div style="font-size:11px;color:var(--tx3)">Age 13+</div></div><div class="pax-ctrl"><button class="pax-btn" onclick="if(gfAdults>1)gfAdults--;renderGuestForm()">−</button><span class="pax-num">${gfAdults}</span><button class="pax-btn" onclick="if(gfAdults<20)gfAdults++;renderGuestForm()">+</button></div></div>
+        <div class="pax-row"><div><div style="font-size:13px;font-weight:500">Children</div><div style="font-size:11px;color:var(--tx3)">Age 3–12 (60% rate)</div></div><div class="pax-ctrl"><button class="pax-btn" onclick="if(gfChildren>0)gfChildren--;renderGuestForm()">−</button><span class="pax-num">${gfChildren}</span><button class="pax-btn" onclick="if(gfChildren<10)gfChildren++;renderGuestForm()">+</button></div></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px"><button class="btn" onclick="gfStep=2;renderGuestForm()"><i class="ti ti-arrow-left"></i> Back</button>${gfTime?`<button class="btn p" style="flex:1;justify-content:center" onclick="gfStep=4;renderGuestForm()">Continue <i class="ti ti-arrow-right"></i></button>`:'<div style="font-size:11px;color:var(--tx3);padding:8px 0;flex:1;text-align:center">Select a time slot</div>'}</div>`;
+  }else if(gfStep===4){
+    const ad=ACTIVITY_DATA.find(a=>a.name===gfAct)||ACTIVITY_DATA[0];
+    const sub=gfAdults*ad.price+gfChildren*Math.round(ad.price*.6);
+    body=`<div class="pay-box" style="margin-bottom:14px">
+      <div class="pay-row"><span>${gfAct}</span><span>${gfOp.split(' ').slice(0,2).join(' ')}</span></div>
+      <div class="pay-row"><span>${gfDate} · ${gfTime}</span><span>${gfAdults}A${gfChildren>0?' '+gfChildren+'C':''}</span></div>
+      <div class="pay-row"><span>${gfAdults} × MYR ${ad.price}</span><span>MYR ${(gfAdults*ad.price).toLocaleString()}</span></div>
+      ${gfChildren>0?`<div class="pay-row"><span>${gfChildren} × MYR ${Math.round(ad.price*.6)}</span><span>MYR ${(gfChildren*Math.round(ad.price*.6)).toLocaleString()}</span></div>`:''}
+      <div class="pay-tot"><span>Total</span><span>MYR ${sub.toLocaleString()}</span></div>
+    </div>
+    <div class="fg">
+      <div><label class="fl">Full name</label><input class="fi" type="text" id="gf-name" placeholder="As per passport"></div>
+      <div><label class="fl">WhatsApp</label><input class="fi" type="text" id="gf-phone" placeholder="+60 12-345 6789"></div>
+      <div><label class="fl">Email</label><input class="fi" type="email" id="gf-email" placeholder="your@email.com"></div>
+      <div><label class="fl">Nationality</label><select class="fs"><option>Malaysian</option><option>Singaporean</option><option>British</option><option>Australian</option><option>Indian</option><option>Chinese</option><option>Other</option></select></div>
+      <div style="grid-column:1/-1"><label class="fl">Special requests</label><input class="fi" type="text" placeholder="Dietary, birthday, accessibility…"></div>
+    </div>
+    <div class="trust-bar"><i class="ti ti-lock"></i> Secure <i class="ti ti-check"></i> Instant confirmation <i class="ti ti-brand-whatsapp"></i> WA receipt</div>
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn" onclick="gfStep=3;renderGuestForm()"><i class="ti ti-arrow-left"></i> Back</button><button class="btn p" style="flex:1;justify-content:center" onclick="gfStep=5;renderGuestForm()"><i class="ti ti-credit-card"></i> Pay MYR ${sub.toLocaleString()}</button></div>`;
+  }else if(gfStep===5){
+    const ad=ACTIVITY_DATA.find(a=>a.name===gfAct)||ACTIVITY_DATA[0];
+    const sub=gfAdults*ad.price+gfChildren*Math.round(ad.price*.6);
+    const banks=[{n:'Maybank2u',col:'#f59e0b'},{n:'CIMB Clicks',col:'#dc2626'},{n:'RHB Now',col:OPS[0].col},{n:'Public Bank',col:'#1e40af'},{n:'AmOnline',col:'#ea580c'},{n:'HSBC',col:'#dc2626'},{n:'Affin Bank',col:'#0f766e'},{n:'BSN',col:'#1e40af'}];
+    const wallets=[{n:"TNG",col:'#0ea5e9'},{n:'GrabPay',col:'#00b14f'},{n:'Boost',col:'#e879a0'},{n:'ShopeePay',col:'#ea580c'},{n:'MAE',col:OPS[3].col}];
+    body=`<div style="background:var(--bg2);border-radius:var(--r8);padding:10px 12px;margin-bottom:12px;font-size:12px;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-weight:600;font-family:var(--font-head)">${gfAct} · ${gfAdults+gfChildren} pax</div><div style="font-size:11px;color:var(--tx2)">${gfOp.split(' ').slice(0,2).join(' ')} · ${gfDate}</div></div>
+      <div style="font-size:16px;font-weight:700;color:var(--ocean);font-family:var(--font-head)">MYR ${sub.toLocaleString()}</div>
+    </div>
+    <label class="fl">Payment method</label>
+    <div class="meth-grid" style="margin-bottom:12px">
+      <div class="mcard ${gwMethod==='fpx'?'sel':''}" onclick="gwMethod='fpx';renderGuestForm()"><div class="mcard-ic"><i class="ti ti-building-bank" style="color:var(--ocean);font-size:20px"></i></div><div class="mcard-nm">FPX</div><div class="mcard-sb">Online banking</div></div>
+      <div class="mcard ${gwMethod==='card'?'sel':''}" onclick="gwMethod='card';renderGuestForm()"><div class="mcard-ic"><i class="ti ti-credit-card" style="color:#1e40af;font-size:20px"></i></div><div class="mcard-nm">Card</div><div class="mcard-sb">Visa / MC</div></div>
+      <div class="mcard ${gwMethod==='ewallet'?'sel':''}" onclick="gwMethod='ewallet';renderGuestForm()"><div class="mcard-ic"><i class="ti ti-wallet" style="color:#0ea5e9;font-size:20px"></i></div><div class="mcard-nm">eWallet</div><div class="mcard-sb">TNG · Grab</div></div>
+    </div>
+    ${gwMethod==='fpx'?`<label class="fl">Select bank</label><div class="bank-grid" style="margin-bottom:12px">${banks.map(bk=>`<div class="bk ${gwBank===bk.n?'sel':''}" onclick="gwBank='${bk.n}';renderGuestForm()"><div class="bk-dot" style="background:${bk.col}">${bk.n.substring(0,2)}</div>${bk.n}</div>`).join('')}</div>`:''}
+    ${gwMethod==='card'?`<div style="margin-bottom:12px"><div class="ci" style="margin-bottom:6px"><i class="ti ti-credit-card"></i><input class="fi" type="text" placeholder="Card number"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:6px"><input class="fi" type="text" placeholder="MM / YY"><input class="fi" type="text" placeholder="CVV"></div><input class="fi" type="text" placeholder="Cardholder name"></div>`:''}
+    ${gwMethod==='ewallet'?`<div class="bank-grid" style="margin-bottom:12px">${wallets.map(w=>`<div class="bk ${gwBank===w.n?'sel':''}" onclick="gwBank='${w.n}';renderGuestForm()"><div class="bk-dot" style="background:${w.col}">${w.n.substring(0,2)}</div>${w.n}</div>`).join('')}</div>`:''}
+    <div class="trust-bar" style="margin-bottom:10px"><i class="ti ti-lock"></i> 256-bit SSL <i class="ti ti-shield-check"></i> Secure gateway</div>
+    <div style="display:flex;gap:8px"><button class="btn" onclick="gfStep=4;renderGuestForm()"><i class="ti ti-arrow-left"></i> Back</button>${gwMethod?`<button class="btn p" style="flex:1;justify-content:center;padding:10px" onclick="processGuestPayment(${sub})"><i class="ti ti-lock"></i> Pay MYR ${sub.toLocaleString()} now</button>`:`<div style="flex:1;text-align:center;font-size:11px;color:var(--tx3);padding:10px">Select payment method</div>`}</div>`;
+  }
+  document.getElementById('guestFormWrap').innerHTML=`<div class="portal-wrap"><div class="steps-bar">${bar}</div>${body}</div>`;
+}
+function processGuestPayment(amt){
+  document.getElementById('guestFormWrap').innerHTML=`<div class="portal-wrap"><div class="processing" style="padding:40px 20px"><div class="spin"></div><div style="font-weight:700;font-family:var(--font-head);margin-bottom:4px">Processing payment…</div><div style="font-size:11px;color:var(--tx2)">Please do not close this page</div><div style="font-size:11px;color:var(--tx2);margin-top:3px">MYR ${amt.toLocaleString()} · ${gwMethod==='fpx'?gwBank:gwMethod}</div></div></div>`;
+  setTimeout(()=>{
+    const newId='BK-'+(2860+bookings.length);
+    const op=OPS.find(o=>o.name===gfOp)||OPS[0];
+    bookings.unshift({id:newId,guest:'Online Guest',phone:'+60 00-000 0000',activity:gfAct,op:gfOp,opCol:op.col,date:gfDate,time:gfTime,pax:gfAdults+gfChildren,total:amt,paid:amt,balance:0,payStatus:'paid',payMethod:gwMethod==='fpx'?'FPX':gwMethod==='card'?'Credit Card':'eWallet',gwRef:gwRef(),status:'confirmed'});
+    renderDash();
+    document.getElementById('guestFormWrap').innerHTML=`<div class="portal-wrap" style="text-align:center;padding:20px 0">
+      <div class="success-circle" style="width:64px;height:64px;margin:0 auto 14px"><i class="ti ti-check" style="font-size:30px"></i></div>
+      <div style="font-size:18px;font-weight:700;font-family:var(--font-head);margin-bottom:6px">Booking confirmed!</div>
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:16px">Check your WhatsApp for booking details</div>
+      <div class="receipt" style="max-width:380px;margin:0 auto 16px;text-align:left">
+        <div class="receipt-row"><span style="color:var(--tx2)">Booking ID</span><span style="font-weight:700;font-family:var(--font-head);color:var(--ocean)">${newId}</span></div>
+        <div class="receipt-row"><span style="color:var(--tx2)">Activity</span><span>${gfAct}</span></div>
+        <div class="receipt-row"><span style="color:var(--tx2)">Operator</span><span>${gfOp.split(' ').slice(0,2).join(' ')}</span></div>
+        <div class="receipt-row"><span style="color:var(--tx2)">Date & time</span><span>${gfDate} · ${gfTime}</span></div>
+        <div class="receipt-row"><span style="color:var(--tx2)">Passengers</span><span>${gfAdults+gfChildren} guests</span></div>
+        <div class="receipt-row"><span style="color:var(--tx2)">Amount paid</span><span style="color:#16a34a;font-weight:700;font-family:var(--font-head)">MYR ${amt.toLocaleString()}</span></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button class="btn wa" onclick="toast('WhatsApp receipt sent!','wa')"><i class="ti ti-brand-whatsapp"></i> Get WA receipt</button>
+        <button class="btn p" onclick="gfStep=1;gfAct='';gfOp='';gfTime='';gfAdults=2;gfChildren=0;gwMethod='';gwBank='';renderGuestForm()"><i class="ti ti-plus"></i> Book another</button>
+      </div>
+    </div>`;
+    toast('Booking '+newId+' confirmed & paid!','ok');
+    setTimeout(()=>toast('WhatsApp receipt sent to guest','wa'),700);
+  },2500);
+}
+function switchPortal(tab){
+  ['book','lookup','paybal'].forEach(t=>{
+    document.getElementById('portal-'+t).style.display=t===tab?'block':'none';
+    const el=document.getElementById('ptab-'+t);
+    if(el){el.classList.toggle('act',t===tab);}
+  });
+  if(tab==='lookup')renderLookup();
+  if(tab==='paybal')renderPayBal();
+}
+function renderLookup(){
+  document.getElementById('lookupWrap').innerHTML=`<div class="portal-wrap"><div class="card">
+    <div class="card-title">Find your booking</div>
+    <div class="fg-full">
+      <div><label class="fl">Booking ID</label><input class="fi" type="text" id="lk-id" placeholder="e.g. BK-2847"></div>
+      <div><label class="fl">Phone number used at booking</label><input class="fi" type="text" id="lk-phone" placeholder="+60 12-345 6789"></div>
+    </div>
+    <button class="btn p btn-full" onclick="doLookup()"><i class="ti ti-search"></i> Find my booking</button>
+    <div id="lk-result"></div>
+  </div></div>`;
+}
+function doLookup(){
+  const id=document.getElementById('lk-id').value;
+  const b=bookings.find(x=>x.id===id)||bookings[0];
+  document.getElementById('lk-result').innerHTML=`<div class="lookup-res" style="margin-top:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:9px">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--teal-ll);display:flex;align-items:center;justify-content:center"><i class="ti ti-check" style="color:var(--teal);font-size:16px"></i></div>
+        <div><div style="font-weight:700;font-family:var(--font-head)">${b.id}</div><div style="font-size:11px;color:var(--tx2)">${b.guest}</div></div>
+      </div>${pSt(b.status)}
+    </div>
+    <div class="lres-grid">
+      <div class="lres-l">Activity</div><div class="lres-v">${b.activity}</div>
+      <div class="lres-l">Operator</div><div class="lres-v">${b.op.split(' ').slice(0,2).join(' ')}</div>
+      <div class="lres-l">Date & time</div><div class="lres-v">${b.date} · ${b.time}</div>
+      <div class="lres-l">Passengers</div><div class="lres-v">${b.pax} guests</div>
+      <div class="lres-l">Total</div><div class="lres-v" style="font-weight:700;font-family:var(--font-head)">MYR ${b.total.toLocaleString()}</div>
+      <div class="lres-l">Payment</div><div class="lres-v">${pPay(b.payStatus)}</div>
+    </div>
+    ${b.balance>0?`<button class="btn p btn-full" style="margin-top:10px" onclick="switchPortal('paybal');document.getElementById('pb-id').value='${b.id}';renderPayBal()"><i class="ti ti-credit-card"></i> Pay balance MYR ${b.balance.toLocaleString()}</button>`:`<div style="margin-top:10px;text-align:center;font-size:12px;color:#16a34a;font-weight:600"><i class="ti ti-check"></i> Fully paid — enjoy your trip!</div>`}
+  </div>`;
+}
+function renderPayBal(){
+  if(!document.getElementById('paybalWrap'))return;
+  const defId=bookings.find(b=>b.balance>0)?.id||'';
+  document.getElementById('paybalWrap').innerHTML=`<div class="portal-wrap"><div class="card">
+    <div class="card-title">Pay outstanding balance</div>
+    <div style="display:flex;gap:7px;margin-bottom:12px"><input class="fi" type="text" id="pb-id" value="${defId}" placeholder="BK-XXXX" style="flex:1" oninput="renderPayBal()"><button class="btn" onclick="renderPayBal()"><i class="ti ti-search"></i></button></div>
+    <div id="pb-body"></div>
+  </div></div>`;
+  updatePayBal();
+}
+function updatePayBal(){
+  const id=(document.getElementById('pb-id')||{value:''}).value;
+  const b=bookings.find(x=>x.id===id);
+  const pb=document.getElementById('pb-body');if(!pb)return;
+  if(!b||b.balance===0){pb.innerHTML=`<div style="text-align:center;font-size:12px;color:var(--tx3);padding:20px">${b?'No outstanding balance for this booking':'Enter a booking ID above'}</div>`;return;}
+  pb.innerHTML=`<div style="background:#fee2e2;border-radius:var(--r8);padding:10px 12px;margin-bottom:12px;font-size:12px"><div style="font-weight:600;font-family:var(--font-head);margin-bottom:4px">${b.activity} · ${b.guest}</div><div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">Outstanding balance</span><span style="color:#dc2626;font-weight:700;font-size:14px;font-family:var(--font-head)">MYR ${b.balance.toLocaleString()}</span></div></div>
+  <label class="fl">Payment method</label>
+  <div class="meth-grid">
+    <div class="mcard ${gwMethod==='fpx'?'sel':''}" onclick="gwMethod='fpx';updatePayBal()"><div class="mcard-ic"><i class="ti ti-building-bank" style="color:var(--ocean);font-size:20px"></i></div><div class="mcard-nm">FPX</div></div>
+    <div class="mcard ${gwMethod==='card'?'sel':''}" onclick="gwMethod='card';updatePayBal()"><div class="mcard-ic"><i class="ti ti-credit-card" style="color:#1e40af;font-size:20px"></i></div><div class="mcard-nm">Card</div></div>
+    <div class="mcard ${gwMethod==='ewallet'?'sel':''}" onclick="gwMethod='ewallet';updatePayBal()"><div class="mcard-ic"><i class="ti ti-wallet" style="color:#0ea5e9;font-size:20px"></i></div><div class="mcard-nm">eWallet</div></div>
+  </div>
+  ${gwMethod?`<button class="btn danger btn-full" onclick="gwBkId='${b.id}';processPayment();nav('gateway',document.querySelectorAll('.tnb')[3])"><i class="ti ti-lock"></i> Pay MYR ${b.balance.toLocaleString()}</button>`:''}`;
+}
+// ═══════════════════════════════════════════════
+//  WHATSAPP
+// ═══════════════════════════════════════════════
+const TPLS={
+  confirm:(g,id,act)=>`🌊 *Booking Confirmed!*\n\nHello ${g},\n\nYour booking *${id}* is confirmed.\n\n📍 *Activity:* ${act}\n📅 *Date:* 8 May 2026\n⏰ *Departure:* 09:00 AM\n\n*Meeting point:* Telaga Harbour Jetty\nArrive 15 mins early.\n\nThank you! 🏝️`,
+  reminder:(g,id)=>`💳 *Payment Reminder*\n\nDear ${g},\n\nYour booking *${id}* has an outstanding balance.\n\nBank: Maybank 5612 3456 7890\nRef: ${id}\n\nContact: +60 4-966 8888`,
+  checkin:(g,id,act)=>`🌅 *Trip Tomorrow!*\n\nHi ${g}!\n\nYour *${act}* (${id}) is tomorrow.\n\n📍 Telaga Harbour Jetty\n⏰ Arrive by 08:45 AM\n🧴 Bring sunscreen & hat\n\nSee you on the water! ⚓`,
+  review:(g,id)=>`⭐ *How was your trip?*\n\nHi ${g},\n\nWe hope you enjoyed booking *${id}*!\n\nLeave a review:\nhttps://g.page/seabook-langkawi\n\nThank you! 🙏`
+};
+let curTpl='confirm';
+function selTpl(tpl,el){curTpl=tpl;document.querySelectorAll('.tpl-card').forEach(t=>t.classList.remove('sel'));el.classList.add('sel');document.getElementById('tpl-label').textContent=el.querySelector('.tpl-name').textContent;updateWAPreview();}
+function updateWAPreview(){const id=document.getElementById('wa-bkid').value;const ph=document.getElementById('wa-phone').value;document.getElementById('wa-bubble').textContent=TPLS[curTpl](GUESTS[0],id,'Island Hopping');document.getElementById('wa-to').textContent=ph;}
+function previewWA(){updateWAPreview();toast('Preview updated','info');}
+function sendWA(){const ph=document.getElementById('wa-phone').value;if(!ph){toast('Enter a phone number','warn');return;}toast('WhatsApp sent to '+ph,'wa');setTimeout(()=>toast('Message delivered ✓','ok'),1100);}
+function quickWA(id,guest,phone){document.getElementById('wa-phone').value=phone;document.getElementById('wa-bkid').value=id;curTpl='confirm';document.querySelectorAll('.tpl-card').forEach(t=>t.classList.remove('sel'));document.getElementById('tpl-confirm').classList.add('sel');updateWAPreview();nav('whatsapp',document.querySelectorAll('.tnb')[5]);toast('WA ready for '+guest.split(' ')[0],'info');}
+function renderWARecent(){
+  if(!document.getElementById('wa-recent'))return;
+  const msgs=[{to:"Ahmad Razali",bk:"BK-2847",tpl:"Confirmation",t:"2 min ago",s:"read"},{to:"Sarah Lim",bk:"BK-2839",tpl:"Payment reminder",t:"18 min ago",s:"delivered"},{to:"Tom Harrison",bk:"BK-2831",tpl:"Check-in reminder",t:"1 hr ago",s:"sent"},{to:"Nurul Ain",bk:"BK-2820",tpl:"Review request",t:"2 hr ago",s:"read"}];
+  const sc={read:'#16a34a',delivered:OPS[0].col,sent:'var(--tx3)'};
+  document.getElementById('wa-recent').innerHTML=msgs.map(m=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--br);font-size:11px"><i class="ti ti-brand-whatsapp" style="color:#16a34a;font-size:14px"></i><div style="flex:1"><div style="font-weight:500">${m.to} · ${m.bk}</div><div style="color:var(--tx3)">${m.tpl}</div></div><div style="text-align:right"><div style="color:var(--tx3)">${m.t}</div><div style="color:${sc[m.s]};font-size:10px;font-weight:600">${m.s}</div></div></div>`).join('');
+}
+// ═══════════════════════════════════════════════
+//  EXPORT
+// ═══════════════════════════════════════════════
+let expHist=[];
+function doExport(type){
+  const names={bookings:'All_Bookings_May2026.xlsx',payments:'Payment_Report_May2026.xlsx',operators:'Operator_Summary.xlsx',activities:'Activity_Breakdown.xlsx',monthly:'Monthly_Report_May2026.xlsx',whatsapp:'WhatsApp_Log.xlsx',custom:'Custom_Export.xlsx'};
+  const fname=names[type]||'Export.xlsx';
+  const prog=document.getElementById('exp-prog');
+  const fill=document.getElementById('exp-fill');
+  const lbl=document.getElementById('exp-lbl');
+  if(prog)prog.style.display='block';
+  toast('Preparing '+fname+'…','info');
+  let p=0;
+  const iv=setInterval(()=>{
+    p+=rnd(15,30);
+    if(fill)fill.style.width=Math.min(p,100)+'%';
+    if(lbl)lbl.textContent=p<40?'Reading data…':p<70?'Building spreadsheet…':p<95?'Finalising…':'Done!';
+    if(p>=100){
+      clearInterval(iv);
+      setTimeout(()=>{if(prog)prog.style.display='none';},1400);
+      toast(fname+' export complete!','ok');
+      expHist.unshift({name:fname,size:rnd(15,60)+' KB',t:'Just now'});
+      renderExpHistory();
+    }
+  },200);
+}
+function renderExpHistory(){
+  const el=document.getElementById('exp-history');if(!el)return;
+  const all=[...expHist,{name:'All_Bookings_May2026.xlsx',size:'48 KB',t:'Today 09:14'},{name:'Payment_Report_Apr2026.xlsx',size:'32 KB',t:'Yesterday 17:22'},{name:'Operator_Summary_Q1.xlsx',size:'18 KB',t:'2 May 17:05'}];
+  el.innerHTML=all.slice(0,6).map(h=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--br);font-size:12px"><i class="ti ti-file-spreadsheet" style="color:#16a34a;font-size:18px"></i><div style="flex:1"><div style="font-weight:500">${h.name}</div><div style="font-size:10px;color:var(--tx3)">${h.size} · ${h.t}</div></div><button class="btn" style="font-size:11px;padding:3px 9px" onclick="toast('Downloading ${h.name}','ok')"><i class="ti ti-download"></i></button></div>`).join('');
+}
+// ═══════════════════════════════════════════════
+//  OPERATORS
+// ═══════════════════════════════════════════════
+function renderOps(){
+  document.getElementById('ops-grid').innerHTML=OPS.map(op=>`
+    <div class="opfull" onclick="toast('${op.name} selected','info')">
+      <div class="opfull-hdr">
+        <div class="opav" style="background:${op.col};width:36px;height:36px;font-size:13px">${op.sh}</div>
+        <div><div style="font-size:13px;font-weight:700;font-family:var(--font-head)">${op.name}</div><div style="font-size:11px;color:var(--tx2)">${op.type} · ${op.boats} vessels</div></div>
+      </div>
+      <div class="op-stats3">
+        <div><div class="op-stat-n">${op.bk}</div><div class="op-stat-l">Bookings</div></div>
+        <div><div class="op-stat-n">MYR ${(op.rev/1000).toFixed(1)}k</div><div class="op-stat-l">Revenue</div></div>
+        <div><div class="op-stat-n">${op.rat}</div><div class="op-stat-l">Rating</div></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--gold)"><i class="ti ti-star" style="font-size:11px"></i>${op.rat} <span style="color:var(--tx3)">(${rnd(40,120)} reviews)</span></div>
+        <div style="display:flex;gap:5px">
+          <button class="btn wa" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();toast('WA blast to ${op.name} guests','wa')"><i class="ti ti-brand-whatsapp"></i></button>
+          <button class="btn xl" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();doExport('operators')"><i class="ti ti-file-spreadsheet"></i></button>
+          <button class="btn" style="padding:3px 8px;font-size:10px" onclick="event.stopPropagation();toast('Managing ${op.name}','info')">Manage</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+// ═══════════════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════════════
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+// ═══════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════
+function toast(msg,type='ok'){
+  const wrap=document.getElementById('toast-wrap');
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  const ic=type==='ok'?'ti-check':type==='warn'?'ti-alert-triangle':type==='wa'?'ti-brand-whatsapp':'ti-info-circle';
+  el.innerHTML=`<i class="ti ${ic}"></i><span>${msg}</span>`;
+  wrap.appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
+  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300);},2800);
+}
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+renderDash();
+renderAll();
+renderOps();
+renderWARecent();
+renderExpHistory();
+renderGuestForm();
+renderGWForm();
+renderPay();
+</script>
+</body>
+</html>
