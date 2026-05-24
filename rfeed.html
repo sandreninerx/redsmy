@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LANGKAWI ISLAND — Tactical Operations Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+  :root {
+    --bg: #0a0e14;
+    --bg-panel: #0d1117;
+    --bg-card: #131920;
+    --fg: #c5cdd8;
+    --fg-dim: #5a6672;
+    --accent: #00e676;
+    --accent-dim: rgba(0,230,118,0.15);
+    --warning: #ffab00;
+    --warning-dim: rgba(255,171,0,0.15);
+    --danger: #ff1744;
+    --danger-dim: rgba(255,23,68,0.15);
+    --info: #00b0ff;
+    --info-dim: rgba(0,176,255,0.15);
+    --border: #1e2730;
+    --radius: 4px;
+    --font-mono: 'Share Tech Mono', monospace;
+    --font-ui: 'Rajdhani', sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--fg);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* Scanline overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,230,118,0.015) 2px,
+      rgba(0,230,118,0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Top bar */
+  .top-bar {
+    height: 48px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 1000;
+    position: relative;
+  }
+
+  .top-bar .left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .top-bar .logo {
+    font-family: var(--font-mono);
+    color: var(--accent);
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+
+  .top-bar .divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+  }
+
+  .top-bar .subtitle {
+    font-size: 13px;
+    color: var(--fg-dim);
+    letter-spacing: 1px;
+    font-weight: 400;
+  }
+
+  .top-bar .center {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .top-bar .right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--fg-dim);
+  }
+
+  .utc-clock {
+    color: var(--accent);
+    font-size: 13px;
+  }
+
+  /* Main layout */
+  .main-layout {
+    display: flex;
+    height: calc(100vh - 48px);
+  }
+
+  /* Left panel - Realtime Feed */
+  .panel-left {
+    width: 340px;
+    min-width: 340px;
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 500;
+  }
+
+  .panel-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-card);
+  }
+
+  .panel-header h2 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--fg);
+  }
+
+  .panel-header .badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid rgba(0,230,118,0.3);
+  }
+
+  .feed-filters {
+    display: flex;
+    gap: 4px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 4px 8px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--fg-dim);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .filter-btn:hover { border-color: var(--fg-dim); color: var(--fg); }
+  .filter-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+  .feed-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 0;
+  }
+
+  .feed-list::-webkit-scrollbar { width: 4px; }
+  .feed-list::-webkit-scrollbar-track { background: transparent; }
+  .feed-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .feed-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(30,39,48,0.5);
+    cursor: pointer;
+    transition: background 0.15s;
+    animation: feed-in 0.3s ease-out;
+  }
+
+  @keyframes feed-in {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .feed-item:hover { background: rgba(0,230,118,0.03); }
+
+  .feed-item .feed-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .feed-item .feed-type {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+
+  .type-maritime { background: var(--info-dim); color: var(--info); border: 1px solid rgba(0,176,255,0.3); }
+  .type-air { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(0,230,118,0.3); }
+  .type-weather { background: var(--warning-dim); color: var(--warning); border: 1px solid rgba(255,171,0,0.3); }
+  .type-security { background: var(--danger-dim); color: var(--danger); border: 1px solid rgba(255,23,68,0.3); }
+  .type-traffic { background: rgba(156,39,176,0.15); color: #ce93d8; border: 1px solid rgba(156,39,176,0.3); }
+
+  .feed-item .feed-time {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--fg-dim);
+  }
+
+  .feed-item .feed-msg {
+    font-size: 12px;
+    color: var(--fg);
+    line-height: 1.4;
+    font-weight: 400;
+  }
+
+  .feed-item .feed-coords {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--fg-dim);
+    margin-top: 3px;
+  }
+
+  /* Map area */
+  .map-area {
+    flex: 1;
+    position: relative;
+  }
+
+  #map {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Custom Leaflet overrides */
+  .leaflet-container { background: #080c10 !important; }
+  .leaflet-control-zoom { border: 1px solid var(--border) !important; }
+  .leaflet-control-zoom a {
+    background: var(--bg-card) !important;
+    color: var(--fg) !important;
+    border-color: var(--border) !important;
+  }
+  .leaflet-control-zoom a:hover { background: var(--bg-panel) !important; }
+  .leaflet-control-attribution { display: none !important; }
+
+  /* Map overlays */
+  .map-overlay-tl {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 800;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .overlay-card {
+    background: rgba(13,17,23,0.92);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    backdrop-filter: blur(8px);
+    min-width: 180px;
+  }
+
+  .overlay-card .oc-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--fg-dim);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .overlay-card .oc-value {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .overlay-card .oc-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--fg-dim);
+    margin-top: 2px;
+  }
+
+  .map-overlay-br {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    z-index: 800;
+  }
+
+  .map-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .map-ctrl-btn {
+    width: 36px;
+    height: 36px;
+    background: rgba(13,17,23,0.92);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--fg-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 13px;
+    backdrop-filter: blur(8px);
+  }
+
+  .map-ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .map-ctrl-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+  /* Right panel - Intel Feed */
+  .panel-right {
+    width: 320px;
+    min-width: 320px;
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 500;
+  }
+
+  .intel-section {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .intel-section-header {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .intel-section-header:hover { background: rgba(255,255,255,0.02); }
+
+  .intel-section-header h3 {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .intel-section-header .count {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 2px;
+    background: var(--danger-dim);
+    color: var(--danger);
+    border: 1px solid rgba(255,23,68,0.3);
+  }
+
+  .intel-section-body {
+    padding: 0 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .intel-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .intel-card:hover { border-color: var(--fg-dim); }
+
+  .intel-card .ic-priority {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .priority-bar {
+    width: 3px;
+    height: 14px;
+    border-radius: 1px;
+  }
+
+  .priority-high { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+  .priority-med { background: var(--warning); box-shadow: 0 0 6px var(--warning); }
+  .priority-low { background: var(--info); box-shadow: 0 0 6px var(--info); }
+
+  .intel-card .ic-class {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--fg-dim);
+    letter-spacing: 1px;
+  }
+
+  .intel-card .ic-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--fg);
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+
+  .intel-card .ic-detail {
+    font-size: 11px;
+    color: var(--fg-dim);
+    line-height: 1.4;
+  }
+
+  .intel-card .ic-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--fg-dim);
+  }
+
+  /* Threat gauge */
+  .threat-gauge {
+    padding: 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-card);
+  }
+
+  .threat-gauge .tg-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--fg-dim);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .threat-bar-bg {
+    height: 6px;
+    background: var(--bg);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .threat-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1s ease, background 1s ease;
+    position: relative;
+  }
+
+  .threat-bar-fill::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: -2px;
+    width: 2px;
+    height: 10px;
+    background: white;
+    border-radius: 1px;
+    box-shadow: 0 0 6px white;
+  }
+
+  .threat-levels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 8px;
+    color: var(--fg-dim);
+    letter-spacing: 1px;
+  }
+
+  .threat-current {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  /* Asset tracker */
+  .asset-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 0;
+  }
+
+  .asset-list::-webkit-scrollbar { width: 4px; }
+  .asset-list::-webkit-scrollbar-track { background: transparent; }
+  .asset-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .asset-item {
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(30,39,48,0.5);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .asset-item:hover { background: rgba(0,230,118,0.03); }
+
+  .asset-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .asset-icon.ship { background: var(--info-dim); color: var(--info); border: 1px solid rgba(0,176,255,0.3); }
+  .asset-icon.heli { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(0,230,118,0.3); }
+  .asset-icon.patrol { background: var(--warning-dim); color: var(--warning); border: 1px solid rgba(255,171,0,0.3); }
+  .asset-icon.station { background: rgba(156,39,176,0.15); color: #ce93d8; border: 1px solid rgba(156,39,176,0.3); }
+
+  .asset-info { flex: 1; min-width: 0; }
+  .asset-name { font-size: 12px; font-weight: 500; color: var(--fg); }
+  .asset-status { font-family: var(--font-mono); font-size: 9px; color: var(--fg-dim); }
+
+  .asset-speed {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-align: right;
+  }
+
+  .asset-speed .val { color: var(--accent); font-size: 13px; font-weight: 700; }
+  .asset-speed .unit { color: var(--fg-dim); font-size: 8px; }
+
+  /* Custom map markers */
+  .custom-marker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .marker-ping {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    animation: marker-ping-anim 2s ease-out infinite;
+  }
+
+  .marker-ping.blue { background: rgba(0,176,255,0.3); }
+  .marker-ping.green { background: rgba(0,230,118,0.3); }
+  .marker-ping.red { background: rgba(255,23,68,0.3); }
+  .marker-ping.yellow { background: rgba(255,171,0,0.3); }
+
+  @keyframes marker-ping-anim {
+    0% { transform: scale(0.5); opacity: 1; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+
+  .marker-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid;
+    z-index: 2;
+  }
+
+  .marker-dot.blue { background: rgba(0,176,255,0.6); border-color: var(--info); box-shadow: 0 0 8px var(--info); }
+  .marker-dot.green { background: rgba(0,230,118,0.6); border-color: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .marker-dot.red { background: rgba(255,23,68,0.6); border-color: var(--danger); box-shadow: 0 0 8px var(--danger); }
+  .marker-dot.yellow { background: rgba(255,171,0,0.6); border-color: var(--warning); box-shadow: 0 0 8px var(--warning); }
+
+  .marker-label {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 8px;
+    color: var(--fg);
+    white-space: nowrap;
+    background: rgba(13,17,23,0.85);
+    padding: 1px 5px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    letter-spacing: 0.5px;
+  }
+
+  /* Grid overlay on map */
+  .grid-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 400;
+    background-image:
+      linear-gradient(rgba(0,230,118,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,230,118,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* Vignette */
+  .vignette {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 399;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%);
+  }
+
+  /* Toast notification */
+  .toast-container {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .toast {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 8px 16px;
+    background: rgba(13,17,23,0.95);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--fg);
+    backdrop-filter: blur(8px);
+    animation: toast-in 0.3s ease-out, toast-out 0.3s ease-in 3.7s forwards;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes toast-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  /* Responsive */
+  @media (max-width: 1100px) {
+    .panel-right { display: none; }
+  }
+  @media (max-width: 800px) {
+    .panel-left { display: none; }
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<header class="top-bar">
+  <div class="left">
+    <span class="logo"><i class="fa-solid fa-satellite-dish" style="margin-right:6px"></i>RECON LANGKAWI</span>
+    <span class="divider"></span>
+    <span class="subtitle">TACTICAL OPERATIONS MAP</span>
+  </div>
+  <div class="center">
+    <span><span class="status-dot"></span> LIVE FEED ACTIVE</span>
+    <span style="color:var(--fg-dim)">TRACKING: <span id="track-count" style="color:var(--accent)">0</span> ASSETS</span>
+  </div>
+  <div class="right">
+    <span id="utc-clock" class="utc-clock">--:--:-- UTC</span>
+    <span>6.35N 99.80E</span>
+  </div>
+</header>
+
+<!-- Main Layout -->
+<div class="main-layout">
+
+  <!-- Left Panel: Realtime Feed -->
+  <aside class="panel-left" aria-label="Realtime feed panel">
+    <div class="panel-header">
+      <h2><i class="fa-solid fa-rss" style="margin-right:6px;color:var(--accent)"></i>REALTIME FEED</h2>
+      <span class="badge" id="feed-count">0 NEW</span>
+    </div>
+    <div class="feed-filters">
+      <button class="filter-btn active" data-filter="all">ALL</button>
+      <button class="filter-btn" data-filter="maritime">MARITIME</button>
+      <button class="filter-btn" data-filter="air">AIR</button>
+      <button class="filter-btn" data-filter="weather">WEATHER</button>
+      <button class="filter-btn" data-filter="security">SECURITY</button>
+      <button class="filter-btn" data-filter="traffic">TRAFFIC</button>
+    </div>
+    <div class="feed-list" id="feed-list" role="log" aria-live="polite"></div>
+  </aside>
+
+  <!-- Map -->
+  <main class="map-area">
+    <div id="map" role="application" aria-label="Langkawi Island tactical map"></div>
+    <div class="grid-overlay"></div>
+    <div class="vignette"></div>
+
+    <!-- Map overlays -->
+    <div class="map-overlay-tl">
+      <div class="overlay-card">
+        <div class="oc-label">Weather Condition</div>
+        <div class="oc-value" style="color:var(--warning)" id="weather-val">PARTLY CLOUDY</div>
+        <div class="oc-sub" id="weather-sub">Wind: 12 kts NW | Vis: 8 km</div>
+      </div>
+      <div class="overlay-card">
+        <div class="oc-label">Active Contacts</div>
+        <div class="oc-value" style="color:var(--accent)" id="contacts-val">0</div>
+        <div class="oc-sub" id="contacts-sub">Maritime: 0 | Air: 0</div>
+      </div>
+      <div class="overlay-card">
+        <div class="oc-label">Sea State</div>
+        <div class="oc-value" style="color:var(--info)">MODERATE</div>
+        <div class="oc-sub">Swell: 1.2m | Temp: 29.4C</div>
+      </div>
+    </div>
+
+    <div class="map-overlay-br">
+      <div class="map-controls">
+        <button class="map-ctrl-btn active" id="btn-grid" title="Toggle Grid" aria-label="Toggle grid overlay"><i class="fa-solid fa-border-all"></i></button>
+        <button class="map-ctrl-btn" id="btn-heat" title="Toggle Heat Zones" aria-label="Toggle heat zones"><i class="fa-solid fa-fire"></i></button>
+        <button class="map-ctrl-btn" id="btn-routes" title="Toggle Routes" aria-label="Toggle routes"><i class="fa-solid fa-route"></i></button>
+        <button class="map-ctrl-btn" id="btn-zones" title="Toggle Zones" aria-label="Toggle restricted zones"><i class="fa-solid fa-shield-halved"></i></button>
+        <button class="map-ctrl-btn" id="btn-center" title="Center Map" aria-label="Center map on Langkawi"><i class="fa-solid fa-crosshairs"></i></button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Right Panel: Intel Feed -->
+  <aside class="panel-right" aria-label="Intel feed panel">
+    <!-- Threat Gauge -->
+    <div class="threat-gauge">
+      <div class="tg-label">THREAT ASSESSMENT LEVEL</div>
+      <div class="threat-current" id="threat-level" style="color:var(--warning)">MODERATE</div>
+      <div class="threat-bar-bg">
+        <div class="threat-bar-fill" id="threat-bar" style="width:45%;background:linear-gradient(90deg,var(--accent),var(--warning))"></div>
+      </div>
+      <div class="threat-levels">
+        <span>LOW</span><span>GUARDED</span><span>ELEVATED</span><span>HIGH</span><span>SEVERE</span>
+      </div>
+    </div>
+
+    <!-- Intel Alerts -->
+    <div class="intel-section">
+      <div class="intel-section-header">
+        <h3><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i> ACTIVE ALERTS</h3>
+        <span class="count" id="alert-count">0</span>
+      </div>
+      <div class="intel-section-body" id="intel-alerts"></div>
+    </div>
+
+    <!-- Intel Reports -->
+    <div class="intel-section" style="flex-shrink:0">
+      <div class="intel-section-header">
+        <h3><i class="fa-solid fa-file-lines" style="color:var(--info)"></i> INTEL REPORTS</h3>
+        <span class="count" style="background:var(--info-dim);color:var(--info);border-color:rgba(0,176,255,0.3)" id="report-count">0</span>
+      </div>
+      <div class="intel-section-body" id="intel-reports"></div>
+    </div>
+
+    <!-- Asset Tracker -->
+    <div class="panel-header" style="flex-shrink:0">
+      <h2><i class="fa-solid fa-location-dot" style="margin-right:6px;color:var(--info)"></i>ASSET TRACKER</h2>
+      <span class="badge" style="background:var(--info-dim);color:var(--info);border-color:rgba(0,176,255,0.3)" id="asset-count">0</span>
+    </div>
+    <div class="asset-list" id="asset-list"></div>
+  </aside>
+
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ============================================================
+// Data: Langkawi points of interest, assets, feed templates
+// ============================================================
+
+const LANGKAWI_CENTER = [6.35, 99.80];
+const LANGKAWI_BOUNDS = [[6.15, 99.55], [6.55, 100.05]];
+
+// Key locations on Langkawi
+const POI = [
+  { name: "Kuah Jetty", lat: 6.3234, lng: 99.8456, type: "port" },
+  { name: "Langkawi Intl Airport", lat: 6.3311, lng: 99.7297, type: "airport" },
+  { name: "Cenang Beach", lat: 6.2965, lng: 99.7150, type: "beach" },
+  { name: "Kilim Karst Mangrove", lat: 6.4080, lng: 99.8540, type: "nature" },
+  { name: "Telaga Harbor", lat: 6.3050, lng: 99.6950, type: "marina" },
+  { name: "Datai Bay", lat: 6.4050, lng: 99.6700, type: "beach" },
+  { name: "Pantai Tengkorak", lat: 6.4300, lng: 99.7200, type: "beach" },
+  { name: "Gunung Raya", lat: 6.4000, lng: 99.7800, type: "peak" },
+  { name: "Tanjung Rhu", lat: 6.4400, lng: 99.8700, type: "beach" },
+  { name: "Air Hangat Village", lat: 6.3500, lng: 99.8200, type: "landmark" },
+  { name: "Pantai Kok", lat: 6.3300, lng: 99.6800, type: "beach" },
+  { name: "Makam Mahsuri", lat: 6.3500, lng: 99.7700, type: "landmark" }
+];
+
+// Simulated moving assets
+const ASSETS = [
+  { id: "MV-001", name: "Bunga Raya", type: "ship", icon: "fa-ship", lat: 6.22, lng: 99.72, heading: 35, speed: 14, status: "Ferry — Kuah to Koh Lipe" },
+  { id: "MV-002", name: "Permaisuri", type: "ship", icon: "fa-ship", lat: 6.30, lng: 99.90, heading: 210, speed: 11, status: "Cargo — Approaching Kuah" },
+  { id: "MV-003", name: "Nautica", type: "ship", icon: "fa-sailboat", lat: 6.38, lng: 99.65, heading: 90, speed: 6, status: "Yacht — Telaga Marina" },
+  { id: "HL-001", name: "Eagle 1", type: "heli", icon: "fa-helicopter", lat: 6.32, lng: 99.76, heading: 180, speed: 120, status: "Patrol — Coastal Sweep" },
+  { id: "HL-002", name: "Eagle 2", type: "heli", icon: "fa-helicopter", lat: 6.42, lng: 99.85, heading: 270, speed: 95, status: "SAR — Mangrove Sector" },
+  { id: "PT-001", name: "Sentinel Alpha", type: "patrol", icon: "fa-shield-halved", lat: 6.28, lng: 99.78, heading: 0, speed: 22, status: "Marine Patrol — South" },
+  { id: "PT-002", name: "Sentinel Bravo", type: "patrol", icon: "fa-shield-halved", lat: 6.45, lng: 99.80, heading: 180, speed: 18, status: "Marine Patrol — North" },
+  { id: "RS-001", name: "Radar West", type: "station", icon: "fa-tower-broadcast", lat: 6.35, lng: 99.60, heading: 0, speed: 0, status: "Radar Station — Active" },
+  { id: "RS-002", name: "Radar North", type: "station", icon: "fa-tower-broadcast", lat: 6.50, lng: 99.80, heading: 0, speed: 0, status: "Radar Station — Active" },
+];
+
+// Realtime feed message templates
+const FEED_TEMPLATES = {
+  maritime: [
+    (a) => `${a.name} — Position update ${a.lat.toFixed(4)}N ${a.lng.toFixed(4)}E, heading ${a.heading}°, speed ${a.speed} kts`,
+    () => "AIS signal detected — Unknown vessel 3.2 nm southwest of Kuah Jetty",
+    () => "Ferry route KL-Langkawi delayed by 15 min due to congestion at Jetty Point",
+    () => "Fishing fleet returning — 12 vessels detected 5 nm northwest of Tanjung Rhu",
+    () => "Cargo vessel MV Pacific Star anchored 2 nm south, awaiting berth assignment",
+    () => "Small craft advisory — Multiple kayaks near Kilim Mangrove, no AIS",
+  ],
+  air: [
+    (a) => `${a.name} — Altitude 1500ft, heading ${a.heading}°, speed ${a.speed} kts`,
+    () => "Commercial flight AK6432 on approach — Langkawi Intl, ETA 8 min",
+    () => "Unidentified drone sighting at 400ft near Cenang Beach — MMEA notified",
+    () => "Medevac helicopter departing Datai Bay for Alor Setar Hospital",
+    () => "Malaysia Airlines MH1432 departed — runway 03, climbing to FL180",
+    () => "Private Cessna 172 on visual approach from Perlis direction",
+  ],
+  weather: [
+    () => "Cumulonimbus forming 15 nm west — potential thunderstorm in 45 min",
+    () => "Wind shift detected — gusting 18 kts from northwest, sea state rising",
+    () => "Visibility dropping to 4 km in haze — advisory issued for maritime ops",
+    () => "Barometric pressure falling 2.3 hPa/hr — weather deterioration likely",
+    () => "High tide at Kuah: 14:32 MYT — 2.8m above chart datum",
+    () => "Rain shower passing over Gunung Raya — intermittent, light intensity",
+  ],
+  security: [
+    () => "Perimeter alert — Zone Bravo, sector 7 — motion detected, under review",
+    () => "Unauthorized vessel entered restricted zone north of Datai Bay",
+    () => "Coastal camera offline — Tanjung Rhu sector — maintenance dispatched",
+    () => "Night patrol checkpoint established at Jalan Pantai Cenang junction",
+    () => "VHF Channel 16 distress call received — 8 nm northeast, investigating",
+    () => "Jet ski rental incident at Cenang Beach — MMEA responding",
+  ],
+  traffic: [
+    () => "Road congestion building at Kuah town center — Jalan Lagenda bottleneck",
+    () => "Tourist shuttle convoy — 6 vehicles en route to Cable Car from Cenang",
+    () => "Traffic accident reported — Jalan Air Hangat, single vehicle, no injuries",
+    () => "Cable Car SkyCab operations normal — 2400 visitors today, queue 15 min",
+    () => "Fuel delivery truck en route to Telaga Harbor fuel depot",
+    () => "Taxi staging area at airport reaching capacity — overflow to Lot 3",
+  ]
+};
+
+// Intel alerts data
+const INTEL_ALERTS = [
+  { priority: "high", classification: "CONFIDENTIAL", title: "Unauthorized Vessel Intrusion", detail: "Unregistered vessel entered RMN restricted zone NW of Datai Bay at 0942 MYT. Hull markings obscured. MMEA patrol dispatched.", time: "0942 MYT", source: "MMEA RADAR" },
+  { priority: "high", classification: "SECRET", title: "Drone Activity Near Airport", detail: "Commercial-grade drone spotted at 400ft AGL within 2nm of LIA controlled airspace. Possible surveillance intent. RMAF notified.", time: "0857 MYT", source: "RMAF ADIZ" },
+  { priority: "med", classification: "CONFIDENTIAL", title: "Smuggling Route Intelligence", detail: "Pattern analysis indicates increased night-time small craft activity along western coastline corridor. Possible fuel smuggling route.", time: "0815 MYT", source: "INTEL ANALYSIS" },
+  { priority: "med", classification: "RESTRICTED", title: "Cable Car Structural Advisory", detail: "Routine inspection flagged minor cable tension variance at Pylon 3. Within tolerance but flagged for priority review.", time: "0730 MYT", source: "LMCD ENG" },
+  { priority: "low", classification: "UNCLASSIFIED", title: "Tourism Volume Anomaly", detail: "Visitor count 40% above seasonal average for past 72 hours. No known event driver. Assessing impact on infrastructure.", time: "0645 MYT", source: "LADA STATS" },
+];
+
+const INTEL_REPORTS = [
+  { priority: "low", classification: "UNCLASSIFIED", title: "Weekly Maritime Traffic Summary", detail: "342 vessel transits recorded in past 7 days. 98% commercial, 2% recreational. No anomalies.", time: "0600 MYT", source: "VTS KUAH" },
+  { priority: "med", classification: "CONFIDENTIAL", title: "Coastal Erosion Assessment", detail: "Satellite imagery shows accelerated erosion at Pantai Tengkorak — 3m retreat in 30 days. Structural risk to coastal road.", time: "2200 MYT", source: "DOSM SATELLITE" },
+  { priority: "low", classification: "UNCLASSIFIED", title: "Ferry Service Reliability Report", detail: "On-time performance: 87%. Primary delay cause: weather (52%), mechanical (28%), congestion (20%).", time: "1800 MYT", source: "MARITIME COMM" },
+];
+
+// ============================================================
+// Map initialization
+// ============================================================
+const map = L.map('map', {
+  center: LANGKAWI_CENTER,
+  zoom: 12,
+  zoomControl: false,
+  minZoom: 10,
+  maxZoom: 18,
+  attributionControl: false
+});
+
+L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+// Dark tile layer
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  maxZoom: 19,
+  subdomains: 'abcd'
+}).addTo(map);
+
+// Add zoom control styling
+const zoomCtrl = document.querySelector('.leaflet-control-zoom');
+if (zoomCtrl) zoomCtrl.style.marginBottom = '50px';
+
+// ============================================================
+// Map markers & layers
+// ============================================================
+
+// POI markers
+POI.forEach(p => {
+  const marker = L.circleMarker([p.lat, p.lng], {
+    radius: 4,
+    fillColor: '#5a6672',
+    fillOpacity: 0.6,
+    color: '#5a6672',
+    weight: 1
+  }).addTo(map);
+
+  marker.bindPopup(`
+    <div style="font-family:Rajdhani,sans-serif;color:#0a0e14;font-size:13px;font-weight:600;">${p.name}</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#5a6672;margin-top:2px;">${p.lat.toFixed(4)}N ${p.lng.toFixed(4)}E</div>
+  `, { className: 'custom-popup' });
+});
+
+// Custom marker creation function
+function createAssetMarker(asset) {
+  const colorMap = { ship: 'blue', heli: 'green', patrol: 'yellow', station: 'blue' };
+  const color = colorMap[asset.type] || 'blue';
+
+  const icon = L.divIcon({
+    className: 'custom-marker',
+    html: `
+      <div class="marker-ping ${color}"></div>
+      <div class="marker-dot ${color}"></div>
+      <div class="marker-label">${asset.id}</div>
+    `,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+  });
+
+  const marker = L.marker([asset.lat, asset.lng], { icon }).addTo(map);
+
+  marker.bindPopup(`
+    <div style="font-family:Rajdhani,sans-serif;color:#0a0e14;min-width:160px;">
+      <div style="font-size:14px;font-weight:700;">${asset.name}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#5a6672;margin:3px 0;">${asset.id} | ${asset.type.toUpperCase()}</div>
+      <div style="font-size:12px;color:#333;">${asset.status}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#5a6672;margin-top:4px;">
+        SPD: ${asset.speed} kts | HDG: ${asset.heading}°<br>
+        ${asset.lat.toFixed(4)}N ${asset.lng.toFixed(4)}E
+      </div>
+    </div>
+  `, { className: 'custom-popup' });
+
+  return marker;
+}
+
+// Create asset markers
+const assetMarkers = {};
+ASSETS.forEach(a => {
+  assetMarkers[a.id] = createAssetMarker(a);
+});
+
+// Restricted zone polygon
+const restrictedZone = L.polygon([
+  [6.43, 99.63], [6.46, 99.63], [6.46, 99.70], [6.43, 99.70]
+], {
+  color: '#ff1744',
+  weight: 1,
+  fillColor: '#ff1744',
+  fillOpacity: 0.08,
+  dashArray: '6 4'
+}).addTo(map);
+restrictedZone.bindPopup('<div style="font-family:Rajdhani;color:#0a0e14;font-weight:600;">RESTRICTED ZONE — RMN TRAINING AREA</div>', { className: 'custom-popup' });
+
+// Route lines (ferry route example)
+const ferryRoute = L.polyline([
+  [6.3234, 99.8456], [6.28, 99.80], [6.22, 99.75], [6.18, 99.70], [6.15, 99.66]
+], {
+  color: '#00b0ff',
+  weight: 1.5,
+  opacity: 0.4,
+  dashArray: '8 6'
+}).addTo(map);
+
+const patrolRoute = L.polyline([
+  [6.28, 99.70], [6.28, 99.78], [6.30, 99.85], [6.35, 99.90], [6.40, 99.88], [6.45, 99.82], [6.45, 99.75], [6.40, 99.70], [6.35, 99.68], [6.30, 99.70], [6.28, 99.70]
+], {
+  color: '#ffab00',
+  weight: 1.5,
+  opacity: 0.35,
+  dashArray: '4 8'
+}).addTo(map);
+
+// Layer groups for toggling
+const gridOverlay = document.querySelector('.grid-overlay');
+const heatZones = [];
+const routeLines = [ferryRoute, patrolRoute];
+const zonePolygons = [restrictedZone];
+
+let showGrid = true, showHeat = false, showRoutes = false, showZones = true;
+
+// Heat zone circles (simulated)
+const heatData = [
+  { lat: 6.323, lng: 99.846, r: 1200, intensity: 0.8 },
+  { lat: 6.297, lng: 99.715, r: 900, intensity: 0.6 },
+  { lat: 6.331, lng: 99.730, r: 1000, intensity: 0.5 },
+  { lat: 6.408, lng: 99.854, r: 800, intensity: 0.4 },
+  { lat: 6.305, lng: 99.695, r: 700, intensity: 0.3 },
+];
+
+heatData.forEach(h => {
+  const circle = L.circle([h.lat, h.lng], {
+    radius: h.r,
+    color: 'transparent',
+    fillColor: '#ff6d00',
+    fillOpacity: h.intensity * 0.15,
+    interactive: false
+  });
+  heatZones.push(circle);
+});
+
+// ============================================================
+// Map control buttons
+// ============================================================
+document.getElementById('btn-grid').addEventListener('click', function() {
+  showGrid = !showGrid;
+  this.classList.toggle('active', showGrid);
+  gridOverlay.style.display = showGrid ? 'block' : 'none';
+});
+
+document.getElementById('btn-heat').addEventListener('click', function() {
+  showHeat = !showHeat;
+  this.classList.toggle('active', showHeat);
+  heatZones.forEach(c => {
+    if (showHeat) c.addTo(map);
+    else map.removeLayer(c);
+  });
+});
+
+document.getElementById('btn-routes').addEventListener('click', function() {
+  showRoutes = !showRoutes;
+  this.classList.toggle('active', showRoutes);
+  routeLines.forEach(l => {
+    if (showRoutes) l.addTo(map);
+    else map.removeLayer(l);
+  });
+  // Show ferry route by default
+  if (!showRoutes) {
+    ferryRoute.addTo(map);
+  }
+});
+
+document.getElementById('btn-zones').addEventListener('click', function() {
+  showZones = !showZones;
+  this.classList.toggle('active', showZones);
+  zonePolygons.forEach(p => {
+    if (showZones) p.addTo(map);
+    else map.removeLayer(p);
+  });
+});
+// Initialize zones button as active
+document.getElementById('btn-zones').classList.add('active');
+
+document.getElementById('btn-center').addEventListener('click', () => {
+  map.flyTo(LANGKAWI_CENTER, 12, { duration: 1 });
+});
+
+// ============================================================
+// Feed system
+// ============================================================
+const feedList = document.getElementById('feed-list');
+const feedCountBadge = document.getElementById('feed-count');
+let feedItems = [];
+let totalFeedCount = 0;
+let activeFilter = 'all';
+
+function getTimestamp() {
+  const now = new Date();
+  return now.toTimeString().slice(0, 8) + ' UTC';
+}
+
+function randomItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function generateFeedItem() {
+  const types = ['maritime', 'air', 'weather', 'security', 'traffic'];
+  const weights = [0.3, 0.2, 0.2, 0.15, 0.15];
+  let r = Math.random(), cum = 0, type = types[0];
+  for (let i = 0; i < types.length; i++) {
+    cum += weights[i];
+    if (r <= cum) { type = types[i]; break; }
+  }
+
+  const templates = FEED_TEMPLATES[type];
+  const asset = randomItem(ASSETS.filter(a => a.type === (type === 'air' ? 'heli' : type === 'maritime' ? 'ship' : null))) || ASSETS[0];
+  const template = randomItem(templates);
+  const msg = typeof template === 'function' ? template(asset) : template;
+
+  const lat = (LANGKAWI_CENTER[0] + (Math.random() - 0.5) * 0.4).toFixed(4);
+  const lng = (LANGKAWI_CENTER[1] + (Math.random() - 0.5) * 0.5).toFixed(4);
+
+  return {
+    type,
+    msg,
+    time: getTimestamp(),
+    coords: `${lat}N ${lng}E`
+  };
+}
+
+function addFeedItem(item) {
+  feedItems.unshift(item);
+  if (feedItems.length > 100) feedItems.pop();
+  totalFeedCount++;
+  renderFeed();
+}
+
+function renderFeed() {
+  const filtered = activeFilter === 'all' ? feedItems : feedItems.filter(f => f.type === activeFilter);
+  feedList.innerHTML = filtered.slice(0, 50).map(item => `
+    <div class="feed-item" onclick="panToFeedItem('${item.coords}')">
+      <div class="feed-top">
+        <span class="feed-type type-${item.type}">${item.type.toUpperCase()}</span>
+        <span class="feed-time">${item.time}</span>
+      </div>
+      <div class="feed-msg">${item.msg}</div>
+      <div class="feed-coords"><i class="fa-solid fa-location-crosshairs" style="margin-right:3px"></i>${item.coords}</div>
+    </div>
+  `).join('');
+  feedCountBadge.textContent = totalFeedCount + ' NEW';
+}
+
+function panToFeedItem(coordsStr) {
+  const parts = coordsStr.match(/([\d.]+)N\s*([\d.]+)E/);
+  if (parts) {
+    map.flyTo([parseFloat(parts[1]), parseFloat(parts[2])], 14, { duration: 0.8 });
+  }
+}
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    activeFilter = this.dataset.filter;
+    renderFeed();
+  });
+});
+
+// ============================================================
+// Intel panels
+// ============================================================
+function renderIntelAlerts() {
+  const container = document.getElementById('intel-alerts');
+  container.innerHTML = INTEL_ALERTS.map(a => `
+    <div class="intel-card">
+      <div class="ic-priority">
+        <div class="priority-bar priority-${a.priority}"></div>
+        <span class="ic-class">${a.classification}</span>
+      </div>
+      <div class="ic-title">${a.title}</div>
+      <div class="ic-detail">${a.detail}</div>
+      <div class="ic-meta">
+        <span><i class="fa-solid fa-clock" style="margin-right:3px"></i>${a.time}</span>
+        <span>${a.source}</span>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('alert-count').textContent = INTEL_ALERTS.length;
+}
+
+function renderIntelReports() {
+  const container = document.getElementById('intel-reports');
+  container.innerHTML = INTEL_REPORTS.map(r => `
+    <div class="intel-card">
+      <div class="ic-priority">
+        <div class="priority-bar priority-${r.priority}"></div>
+        <span class="ic-class">${r.classification}</span>
+      </div>
+      <div class="ic-title">${r.title}</div>
+      <div class="ic-detail">${r.detail}</div>
+      <div class="ic-meta">
+        <span><i class="fa-solid fa-clock" style="margin-right:3px"></i>${r.time}</span>
+        <span>${r.source}</span>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('report-count').textContent = INTEL_REPORTS.length;
+}
+
+function renderAssetList() {
+  const container = document.getElementById('asset-list');
+  container.innerHTML = ASSETS.map(a => `
+    <div class="asset-item" onclick="flyToAsset('${a.id}')">
+      <div class="asset-icon ${a.type}"><i class="fa-solid ${a.icon}"></i></div>
+      <div class="asset-info">
+        <div class="asset-name">${a.name}</div>
+        <div class="asset-status">${a.status}</div>
+      </div>
+      <div class="asset-speed">
+        <div class="val">${a.speed}</div>
+        <div class="unit">KTS</div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('asset-count').textContent = ASSETS.length;
+}
+
+function flyToAsset(id) {
+  const asset = ASSETS.find(a => a.id === id);
+  if (asset) {
+    map.flyTo([asset.lat, asset.lng], 14, { duration: 0.8 });
+    if (assetMarkers[id]) assetMarkers[id].openPopup();
+  }
+}
+
+// ============================================================
+// Asset movement simulation
+// ============================================================
+function moveAssets() {
+  ASSETS.forEach(a => {
+    if (a.speed === 0) return;
+
+    // Slightly vary heading for realism
+    a.heading += (Math.random() - 0.5) * 8;
+    if (a.heading < 0) a.heading += 360;
+    if (a.heading >= 360) a.heading -= 360;
+
+    const rad = (a.heading * Math.PI) / 180;
+    // Speed in kts, convert to deg/sec (very rough for visual effect)
+    const speedFactor = a.speed * 0.000003;
+    a.lat += Math.cos(rad) * speedFactor;
+    a.lng += Math.sin(rad) * speedFactor;
+
+    // Keep within bounds (bounce back)
+    if (a.lat < 6.12 || a.lat > 6.55) {
+      a.heading = (360 - a.heading) % 360;
+    }
+    if (a.lng < 99.50 || a.lng > 100.05) {
+      a.heading = (180 - a.heading + 360) % 360;
+    }
+
+    // Update marker
+    if (assetMarkers[a.id]) {
+      assetMarkers[a.id].setLatLng([a.lat, a.lng]);
+    }
+  });
+}
+
+// ============================================================
+// Threat level fluctuation
+// ============================================================
+const THREAT_LEVELS = [
+  { label: 'LOW', color: '#00e676', min: 0, max: 20 },
+  { label: 'GUARDED', color: '#00b0ff', min: 20, max: 40 },
+  { label: 'MODERATE', color: '#ffab00', min: 40, max: 60 },
+  { label: 'HIGH', color: '#ff6d00', min: 60, max: 80 },
+  { label: 'SEVERE', color: '#ff1744', min: 80, max: 100 },
+];
+
+let threatValue = 42;
+
+function updateThreatLevel() {
+  threatValue += (Math.random() - 0.48) * 6;
+  threatValue = Math.max(5, Math.min(95, threatValue));
+
+  const level = THREAT_LEVELS.find(l => threatValue >= l.min && threatValue < l.max) || THREAT_LEVELS[2];
+  const bar = document.getElementById('threat-bar');
+  const label = document.getElementById('threat-level');
+
+  bar.style.width = threatValue + '%';
+  bar.style.background = `linear-gradient(90deg, #00e676, ${level.color})`;
+  label.textContent = level.label;
+  label.style.color = level.color;
+}
+
+// ============================================================
+// Weather fluctuation
+// ============================================================
+const WEATHER_STATES = [
+  { val: 'CLEAR SKIES', sub: 'Wind: 8 kts NW | Vis: 12 km', color: '#00e676' },
+  { val: 'PARTLY CLOUDY', sub: 'Wind: 12 kts NW | Vis: 8 km', color: '#ffab00' },
+  { val: 'OVERCAST', sub: 'Wind: 15 kts W | Vis: 6 km', color: '#ffab00' },
+  { val: 'SCATTERED SHOWERS', sub: 'Wind: 18 kts SW | Vis: 4 km', color: '#ff6d00' },
+  { val: 'THUNDERSTORM WARNING', sub: 'Wind: 25 kts SW | Vis: 2 km', color: '#ff1744' },
+];
+let weatherIdx = 1;
+
+function updateWeather() {
+  const r = Math.random();
+  if (r < 0.05 && weatherIdx < 4) weatherIdx++;
+  else if (r > 0.95 && weatherIdx > 0) weatherIdx--;
+  else if (r < 0.3 && weatherIdx > 0) weatherIdx--;
+
+  const w = WEATHER_STATES[weatherIdx];
+  document.getElementById('weather-val').textContent = w.val;
+  document.getElementById('weather-val').style.color = w.color;
+  document.getElementById('weather-sub').textContent = w.sub;
+
+  if (weatherIdx >= 3) {
+    showToast('Weather advisory: ' + w.val, 'warning');
+  }
+}
+
+// ============================================================
+// Contact counter
+// ============================================================
+function updateContacts() {
+  const maritime = ASSETS.filter(a => a.type === 'ship' || a.type === 'patrol').length;
+  const air = ASSETS.filter(a => a.type === 'heli').length;
+  const total = maritime + air + Math.floor(Math.random() * 3);
+  document.getElementById('contacts-val').textContent = total;
+  document.getElementById('contacts-sub').textContent = `Maritime: ${maritime + Math.floor(Math.random() * 3)} | Air: ${air}`;
+  document.getElementById('track-count').textContent = ASSETS.length;
+}
+
+// ============================================================
+// Toast system
+// ============================================================
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const colors = { info: 'var(--info)', warning: 'var(--warning)', danger: 'var(--danger)', success: 'var(--accent)' };
+  const icons = { info: 'fa-circle-info', warning: 'fa-triangle-exclamation', danger: 'fa-circle-xmark', success: 'fa-circle-check' };
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<i class="fa-solid ${icons[type]}" style="color:${colors[type]}"></i> ${msg}`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    if (toast.parentNode) toast.parentNode.removeChild(toast);
+  }, 4000);
+}
+
+// ============================================================
+// Clock
+// ============================================================
+function updateClock() {
+  const now = new Date();
+  document.getElementById('utc-clock').textContent = now.toUTCString().slice(17, 25) + ' UTC';
+}
+
+// ============================================================
+// Random intel alert injection
+// ============================================================
+const RANDOM_ALERTS = [
+  { priority: "med", classification: "CONFIDENTIAL", title: "Unusual VHF Traffic", detail: "Encrypted VHF communication detected on Channel 12 — origin NW sector. Monitoring.", source: "SIGINT" },
+  { priority: "low", classification: "UNCLASSIFIED", title: "Wildlife Movement Alert", detail: "Large group of hornbills detected moving from Kilim to Datai corridor — possible environmental indicator.", source: "WILDLIFE CAM" },
+  { priority: "high", classification: "SECRET", title: "Radar Anomaly Detected", detail: "Intermittent contact 12 nm west — disappearing below radar horizon. Possible submarine snorkel.", source: "RADAR WEST" },
+  { priority: "med", classification: "CONFIDENTIAL", title: "Fuel Spill Report", detail: "Small diesel sheen spotted 0.5 nm south of Telaga Harbor. Estimated 50 liters. Cleanup dispatched.", source: "MARINE ENV" },
+];
+
+function injectRandomAlert() {
+  if (Math.random() < 0.3 && INTEL_ALERTS.length < 10) {
+    const alert = { ...randomItem(RANDOM_ALERTS), time: new Date().toTimeString().slice(0, 5) + ' MYT' };
+    INTEL_ALERTS.unshift(alert);
+    renderIntelAlerts();
+    showToast('New intel alert: ' + alert.title, alert.priority === 'high' ? 'danger' : 'warning');
+  }
+}
+
+// ============================================================
+// Initialize
+// ============================================================
+renderIntelAlerts();
+renderIntelReports();
+renderAssetList();
+updateClock();
+updateContacts();
+
+// Initial feed items
+for (let i = 0; i < 8; i++) {
+  addFeedItem(generateFeedItem());
+}
+
+// ============================================================
+// Main update loops
+// ============================================================
+
+// Fast loop: clock, asset movement
+setInterval(() => {
+  updateClock();
+  moveAssets();
+}, 1000);
+
+// Medium loop: feed updates
+setInterval(() => {
+  addFeedItem(generateFeedItem());
+}, 3000);
+
+// Slower loops
+setInterval(updateThreatLevel, 5000);
+setInterval(updateWeather, 10000);
+setInterval(updateContacts, 7000);
+setInterval(injectRandomAlert, 15000);
+setInterval(() => {
+  renderAssetList(); // Refresh asset list with updated speeds
+}, 4000);
+
+// Vary asset speeds slightly
+setInterval(() => {
+  ASSETS.forEach(a => {
+    if (a.speed > 0) {
+      a.speed = Math.max(1, a.speed + (Math.random() - 0.5) * 3);
+      a.speed = Math.round(a.speed * 10) / 10;
+    }
+  });
+}, 5000);
+
+// Startup toast
+setTimeout(() => showToast('Tactical feed initialized — Langkawi sector active', 'success'), 500);
+setTimeout(() => showToast('Tracking ' + ASSETS.length + ' assets across operational area', 'info'), 2000);
+</script>
+</body>
+</html>
